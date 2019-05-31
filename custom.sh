@@ -1,327 +1,227 @@
 #!/bin/bash
+# eXo Basic Shell Commands
+# Released by Houssem B. Ali  eXo Support Lab 
 
-##########################################################################
-function tclear() {
-   export tcloader="./bin/tomcat-juli.jar"
-  if [ ! -f "$tcloader" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export ERROR_COUNT=0
-   export  GATEIN_DIR="./gatein"
-   if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export  LOGS_DIR="./logs"
-   if [ ! -d "$LOGS_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1
-   fi
-   export  TMP_DIRECTORY="./tmp"
-
-   if [[ $ERROR_COUNT == 0 ]]; then      
-             echo "Tomcat cleared !" 
-   else 
-       echo "Error, Check if you are working on Tomcat Directory!" 
-       return
-   fi
-   rm -rf "$LOGS_DIR/*" &> \dev\null
-      rm -rf "$GATEIN_DIR/data" &> \dev\null
-      rm -rf "$TMP_DIRECTORY/*" &> \dev\null
+# @Public: Clear DATA FOR TOMCAT & JBOSS
+function exodataclear() {
+    if [ $(isTomcat) = 0 -a  $(isJBoss) = 0  ]; then
+		exoprint_err "Please check you are working on eXo Platform server instance!"
+		return
+	fi
+	
+	if [ $(isTomcat) = 1 ]; then
+	   tomcatdataclear
+	   return
+	fi
+	
+	if [ $(isJBoss) = 1 ]; then
+	   jbossdataclear
+	   return
+	fi
 }
-##########################################################################
-function jclear() {
-   export tcloader="./bin/launcher.jar"
-  if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export ERROR_COUNT=0
-   export  GATEIN_DIR="./standalone/data"
-   if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export  LOGS_DIR="./standalone/log"
-   if [ ! -d "$LOGS_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1
-   fi
-   export  TMP_DIRECTORY="./standalone/tmp"
 
-   if [[ $ERROR_COUNT == 0 ]]; then      
-             echo "JBoss cleared !" 
-   else 
-       echo "Error, Check if you are working on JBoss Directory!" 
-       return
-   fi
-   rm -rf "$LOGS_DIR/*" &> \dev\null
-      rm -rf "$GATEIN_DIR/data" &> \dev\null
-      rm -rf "$TMP_DIRECTORY/*" &> \dev\null
+# @Public: Dump DATA FOR TOMCAT & JBOSS
+function exodatadump() {
+    if [ $(isTomcat) = 0 -a  $(isJBoss) = 0  ]; then
+		exoprint_err "Please check you are working on eXo Platform server instance!"
+		return
+	fi
+	
+	if [ $(isTomcat) = 1 ]; then
+	   tomcatdatadump
+	   return
+	fi
+	
+	if [ $(isJBoss) = 1 ]; then
+	   jbossdatadump
+	   return
+	fi
 }
-##########################################################################
-function tdump() {
-   export tcloader="./bin/tomcat-juli.jar"
-  if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export ERROR_COUNT=0
-   export  GATEIN_DIR="./gatein"
-   if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export  LOGS_DIR="./logs"
-   if [ ! -d "$LOGS_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1
-   fi
-   export  TMP_DIRECTORY="./tmp"
 
-   if [[ $ERROR_COUNT == 0 ]]; then      
-             echo "Tomcat Dumped !" 
-   else 
-       echo "Error, Check if you are working on Tomcat Directory!" 
-       return
-   fi
-       mkdir -p "$LOGS_DIR/bck/" &> \dev\null
-       mv "$LOGS_DIR/*" "$LOGS_DIR/bck/" &> \dev\null
-       mkdir -p "$GATEIN_DIR/data/bck/" &> \dev\null
-       mv "$GATEIN_DIR/data/*" "$GATEIN_DIR/data/bck/" &> \dev\null
-       mkdir "$TMP_DIRECTORY/bck" &> \dev\null
-       mv "$TMP_DIRECTORY/*" "$TMP_DIRECTORY/bck" &> \dev\null
+# @Public: Change Database FOR TOMCAT & JBOSS
+function exochangedb() {
+    if [ $(isTomcat) = 0 -a  $(isJBoss) = 0  ]; then
+		exoprint_err "Please check you are working on eXo Platform server instance!"
+		return
+	fi
+	
+	if [ $(isTomcat) = 1 ]; then
+	   tomcatchangedb
+	   return
+	fi
+	
+	if [ $(isJBoss) = 1 ]; then
+	   jbosschangedb
+	   return
+	fi
 }
-##########################################################################
-function jdump() {
-   export tcloader="./bin/launcher.jar"
-  if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export ERROR_COUNT=0
-   export  GATEIN_DIR="./standalone/data"
-   if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export  LOGS_DIR="./standalone/log"
-   if [ ! -d "$LOGS_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1
-   fi
-   export  TMP_DIRECTORY="./standalone/tmp"
 
-   if [[ $ERROR_COUNT == 0 ]]; then      
-             echo "JBoss Dumped !" 
-   else 
-       echo "Error, Check if you are working on JBoss Directory!" 
-       return
-   fi
-       mkdir -p "$LOGS_DIR/bck/" &> \dev\null
-       mv "$LOGS_DIR/*" "$LOGS_DIR/bck/" &> \dev\null
-       mkdir -p "$GATEIN_DIR/data/bck/" &> \dev\null
-       mv "$GATEIN_DIR/data/*" "$GATEIN_DIR/data/bck/" &> \dev\null
-       mkdir "$TMP_DIRECTORY/bck" &> \dev\null
-       mv "$TMP_DIRECTORY/*" "$TMP_DIRECTORY/bck" &> \dev\null
+# @Private: Tomcat Server Check
+function isTomcat(){
+   [ -f "./bin/tomcat-juli.jar" ] && echo 1 || echo 0
 }
-##########################################################################
-function tdbms() {
-   export tcloader="./bin/tomcat-juli.jar"
-  if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export ERROR_COUNT=0
-   export  GATEIN_DIR="./gatein"
-   if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export  LOGS_DIR="./logs"
-   if [ ! -d "$LOGS_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1
-   fi
-   export  TMP_DIRECTORY="./tmp"
 
-   if [[ ! $ERROR_COUNT == 0 ]]; then      
-       echo "Error, Check if you are working on Tomcat Directory!" 
-       return
-   fi
-   export CONF_DIR="./conf"
+# @Private: JBoss Server Check
+function isJBoss(){
+   [ -f "../bin/launcher.jar" ] && echo 1 || echo 0
+}
+
+# @Private: Tomcat Data Clear
+function tomcatdataclear() {
+    GATEIN_DIR="./gatein"
+    LOGS_DIR="./logs"
+    TMP_DIRECTORY="./tmp"    
+	rm -rf "$LOGS_DIR/*" &> \dev\null
+    rm -rf "$GATEIN_DIR/data" &> \dev\null
+    rm -rf "$TMP_DIRECTORY/*" &> \dev\null
+    exoprint_suc "eXo Tomcat Server Data has been cleared !" 
+}
+
+# @Private: JBoss Data Clear
+function jbossdataclear() {
+    GATEIN_DIR="./standalone/data"
+    LOGS_DIR="./standalone/log"
+    TMP_DIRECTORY="./standalone/tmp"
+	rm -rf "$LOGS_DIR/*" &> \dev\null
+    rm -rf "$GATEIN_DIR/data" &> \dev\null
+    rm -rf "$TMP_DIRECTORY/*" &> \dev\null
+    exoprint_suc "eXo JBoss Server Data has been cleared !" 
+}
+
+# @Private: Tomcat Data Dump
+function tomcatdatadump() {
+    GATEINDATA_DIR="./gatein/data"
+    LOGS_DIR="./logs"
+    TMP_DIRECTORY="./tmp"    
+    rm -rf "DATABACKUP" &> \dev\null
+    mkdir -p "DATABACKUP/gatein/data/" &> \dev\null
+    mkdir -p "DATABACKUP/logs" &> \dev\null
+    mkdir -p "DATABACKUP/tmp" &> \dev\null   
+    mv "$LOGS_DIR/*" "DATABACKUP/logs/" &> \dev\null
+    mv "$GATEINDATA_DIR/*" "DATABACKUP/gatein/data/" &> \dev\null
+    mv "$TMP_DIRECTORY/*" "DATABACKUP/tmp/" &> \dev\null
+    exoprint_suc "eXo Tomcat Server Data has been dumped !" 
+}
+
+# @Private: JBoss Data Dump
+function jbossdatadump() {
+    GATEINDATA_DIR="./standalone/data"
+    LOGS_DIR="./standalone/log"
+    TMP_DIRECTORY="./standalone/tmp"
+    rm -rf "DATABACKUP" &> \dev\null
+    mkdir -p "DATABACKUP/gatein/data/" &> \dev\null
+    mkdir -p "DATABACKUP/logs" &> \dev\null
+    mkdir -p "DATABACKUP/tmp" &> \dev\null   
+    mv "$LOGS_DIR/*" "DATABACKUP/logs/" &> \dev\null
+    mv "$GATEINDATA_DIR/*" "DATABACKUP/gatein/data/" &> \dev\null
+    mv "$TMP_DIRECTORY/*" "DATABACKUP/tmp/" &> \dev\null
+    exoprint_suc "eXo JBoss Server Data has been dumped !" 
+}
+
+# @Private: [Generic] Switch Server DB
+function switchdb(){
+    PLUGIN=""
+    case "$1" in
+	"mysql")  
+            ADDON_NAME="exo-jdbc-driver-mysql"
+            SOURCE_CONF="$CONF_DIR/server-mysql.xml"
+	        exoprint_suc "MySQL DB has been selected"                
+		;;
+	"oracle")
+	        ADDON_NAME="exo-jdbc-driver-oracle"
+            SOURCE_CONF="$CONF_DIR/server-oracle.xml"
+			exoprint_suc "Oracle DB has been selected"
+		;;
+        "mssql")
+		    ADDON_NAME="exo-jdbc-driver-mssql"
+            SOURCE_CONF="$CONF_DIR/server-mssql.xml"
+		echo "MS SQL Server DB has been selected"
+                
+		;;
+        "postgres")
+			ADDON_NAME="exo-jdbc-driver-postgres"
+            SOURCE_CONF="$CONF_DIR/server-postgres.xml"
+			exoprint_suc "MS SQL Server DB has been selected"               
+		;;
+        "postgresplus")
+			ADDON_NAME="exo-jdbc-driver-postgres"
+            SOURCE_CONF="$CONF_DIR/server-postgresplus.xml"
+			exoprint_suc "MS SQL Server DB has been selected"               
+		;;
+        "sybase")
+			# ADDON_NAME="exo-jdbc-driver-sybase" [[ No Plugin ]]
+            SOURCE_CONF="$CONF_DIR/server-sybase.xml"
+			exoprint_suc "Sybase DB is selected"                
+		;;
+        "hsqldb")
+		    SOURCE_CONF="$CONF_DIR/server-hsqldb.xml"
+			exoprint_suc "hsqldb is selected"                
+		;;
+	esac
+    cp -rf "$SOURCE_CONF" "$CONF_DIR/server.xml" &> /dev/null
+    if [ ! -z "$ADDON_NAME" ]; then
+         ./addon install $ADDON_NAME;
+    fi
+}
+
+# @Private: Tomcat Change Database
+function tomcatchangedb() {
+     CONF_DIR="./conf"
      cp -rf "$CONF_DIR/server.xml" "$CONF_DIR/server.old.xml" &> /dev/null
-    export SOURCE_CONF="$CONF_DIR/server.xml"
-    export PLUGIN=""
-    case "$1" in
-	"mysql")  
-                export PLUGIN="exo-jdbc-driver-mysql"
-                export SOURCE_CONF="$CONF_DIR/server-mysql.xml"
-		echo "MySQL DB is selected"
-                
-		;;
-	"oracle")
-		export PLUGIN="exo-jdbc-driver-oracle"
-                export SOURCE_CONF="$CONF_DIR/server-oracle.xml"
-		echo "Oracle DB is selected"
-		
-		;;
-        "mssql")
-		export PLUGIN="exo-jdbc-driver-mssql"
-                export SOURCE_CONF="$CONF_DIR/server-mssql.xml"
-		echo "MS SQL Server DB is selected"
-                
-		;;
-        "postgres")
-		export PLUGIN="exo-jdbc-driver-postgres"
-                export SOURCE_CONF="$CONF_DIR/server-postgres.xml"
-		echo "MS SQL Server DB is selected"
-                
-		;;
-        "postgresplus")
-		export PLUGIN="exo-jdbc-driver-postgres"
-                export SOURCE_CONF="$CONF_DIR/server-postgresplus.xml"
-		echo "MS SQL Server DB is selected"
-                
-		;;
-        "sybase")
-		#export PLUGIN="exo-jdbc-driver-sybase"
-                export SOURCE_CONF="$CONF_DIR/server-sybase.xml"
-		echo "Sybase DB is selected"
-                
-		;;
-        "hsqldb")
-		export SOURCE_CONF="$CONF_DIR/server-hsqldb.xml"
-		echo "hsqldb is selected"
-                
-		;;
-	
-  esac
-  
-            cp -rf "$SOURCE_CONF" "$CONF_DIR/server.xml" &> /dev/null
-             
-           if [ ! -z "$PLUGIN" ]; then
-                ./addon install $PLUGIN;
-            fi
-
+     SOURCE_CONF="$CONF_DIR/server.xml"
+     switchdb
 }
-##########################################################################
-function jdbms() {
-   export tcloader="./bin/launcher.jar"
-  if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export ERROR_COUNT=0
-   export  GATEIN_DIR="./standalone/data"
-   if [ ! -d "$GATEIN_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1 
-   fi
-   export  LOGS_DIR="./standalone/log"
-   if [ ! -d "$LOGS_DIR" ]; then
-      export ERROR_COUNT=$ERROR_COUNT+1
-   fi
-   export  TMP_DIRECTORY="./standalone/tmp"
 
-   if [[ ! $ERROR_COUNT == 0 ]]; then      
-       echo "Error, Check if you are working on JBoss Directory!" 
-       return
-   fi
-   #export CONF_DIR="./conf"
-   #  cp -rf "$CONF_DIR/server.xml" "$CONF_DIR/server.old.xml" &> /dev/null
-   # export SOURCE_CONF="$CONF_DIR/server.xml"
-    export PLUGIN=""
-    case "$1" in
-	"mysql")  
-   export PLUGIN="exo-jdbc-driver-mysql"
-              #  export SOURCE_CONF="$CONF_DIR/server-mysql.xml"
-		echo "MySQL DB is selected"
-                
-		;;
-	"oracle")
-	      	export PLUGIN="exo-jdbc-driver-oracle"
-              #  export SOURCE_CONF="$CONF_DIR/server-oracle.xml"
-		echo "Oracle DB is selected"
-		
-		;;
-        "mssql")
-		export PLUGIN="exo-jdbc-driver-mssql"
-               # export SOURCE_CONF="$CONF_DIR/server-mssql.xml"
-		echo "MS SQL Server DB is selected"
-                
-		;;
-        "postgres")
-		export PLUGIN="exo-jdbc-driver-postgres"
-                #export SOURCE_CONF="$CONF_DIR/server-postgres.xml"
-		echo "MS SQL Server DB is selected"
-                
-		;;
-        "postgresplus")
-		export PLUGIN="exo-jdbc-driver-postgres"
-                #export SOURCE_CONF="$CONF_DIR/server-postgresplus.xml"
-		echo "MS SQL Server DB is selected"
-                
-		;;
-        "sybase")
-		#export PLUGIN="exo-jdbc-driver-sybase"
-                #export SOURCE_CONF="$CONF_DIR/server-sybase.xml"
-		echo "Sybase DB is selected"
-                
-		;;
-        "hsqldb")
-		#export SOURCE_CONF="$CONF_DIR/server-hsqldb.xml"
-		echo "hsqldb is selected"
-                
-		;;
-	
-  esac
-  
-          #  cp -rf "$SOURCE_CONF" "$CONF_DIR/server.xml" &> /dev/null
-             
-           if [ ! -z "$PLUGIN" ]; then
-                ./addon install $PLUGIN;
-            fi
-
+# @Private: JBoss Change Database
+function jbosschangedb() {
+     CONF_DIR="./conf"
+     cp -rf "$CONF_DIR/server.xml" "$CONF_DIR/server.old.xml" &> /dev/null
+     SOURCE_CONF="$CONF_DIR/server.xml"
+     switchdb
 }
-##########################################################################
-function plf(){
-                     if [[ $1 == "reset" ]]; then
-                       rm -rf $HOME/plf.exo &> /dev/null
-                       return    
-                     fi
 
-if [[ $1 == "help" ]]; then
-                       echo "****eXo Support Auto PLF Downloader****"
-                       echo "---------------------------------------"
-                       echo 
-                       echo "Help:"
-                       echo " plf <server:tomcat|jboss> <plf-version> [noclean]: download and extract the plf."
-                       echo " plf <reset> : reset the repository credinals."
-                       return    
-                     fi
-
- count=$(dpkg -l | grep wget  | wc -l)
+# @Public: Get eXo Platform Server instance From Repository
+function exoget(){
+	 if [[ $1 == "--reset" ]]; then
+		rm -rf "$HOME/.plfcred.exo" &> /dev/null
+		exoprint_suc "Repository credentials has been cleared!"
+		return
+     fi
+	 count=$(dpkg -l | grep wget  | wc -l)
       if [[ "$count" == "0" ]]; then
-         sudo apt-get install -y wget &> \dev\null
+         exoprint_err "wget is not installed !"
+         return
       fi
-          if [[ ! -f "$HOME/plf.exo" ]]; then 
-               echo "Please input your repository credinals"
-               echo -n Username: 
-               read username
-               echo -n Password: 
-               read -s password
-               echo "$username:$password" > "$HOME/plf.exo" 
-               clear
-               echo "Initial Config File has been created!"
-           fi
-              cred=$(< "$HOME/plf.exo")
-               if [[ $1 == "tomcat" ]]; then
-               export tp="repository.exoplatform.org/content/groups/private/com/exoplatform/platform/distributions/plf-enterprise-tomcat-standalone/$2/plf-enterprise-tomcat-standalone-$2.zip"
-                             fname="plf-enterprise-tomcat-standalone-$2.zip"
-fi
-               if [[ $1 == "jboss" ]]; then
-               export tp="repository.exoplatform.org/content/groups/private/com/exoplatform/platform/distributions/plf-enterprise-jbosseap-standalone/$2/plf-enterprise-jbosseap-standalone-$2.zip"
-               fname="plf-enterprise-jbosseap-standalone-$2.zip"
-               fi
-               export purl="https://$cred@$tp"              
-                wget  $purl -O $fname --progress=bar:force 2>&1 | progressfilt
-                unzip -Z -1 $fname | head -1 >"/tmp/tmp.txt"
-               dirname=$(< "/tmp/tmp.txt")
-               /usr/bin/unzip -o $fname &> /dev/null 
-             if [[ ! $3 == "noclean" ]]; then
-               rm -rf $fname 
-             fi
-               cd ./$dirname
-              if [[ $1 == "tomcat" ]]; then
-                    cd ..
-                fi
+      if [[ ! -f "$HOME/.plfcred.exo" ]]; then 
+         echo "Please input your eXo repository credinals"
+         echo -n "Username: " 
+         read username
+         echo -n "Password: " 
+         read -s password
+         echo "$username:$password" > "$HOME/.plfcred.exo" 
+         clear
+         echo "Initial Config File has been created!"
+      fi
+      cred=$(< "$HOME/.plfcred.exo")
+      if [[ $1 == "tomcat" ]]; then
+         SRVURI="repository.exoplatform.org/content/groups/private/com/exoplatform/platform/distributions/plf-enterprise-tomcat-standalone/$2/plf-enterprise-tomcat-standalone-$2.zip"
+         ZIPFILENAME="plf-enterprise-tomcat-standalone-$2.zip"
+	  fi
+      if [[ $1 == "jboss" ]]; then
+         SRVURI="repository.exoplatform.org/content/groups/private/com/exoplatform/platform/distributions/plf-enterprise-jbosseap-standalone/$2/plf-enterprise-jbosseap-standalone-$2.zip"
+         ZIPFILENAME="plf-enterprise-jbosseap-standalone-$2.zip"
+      fi
+      SRVFULLURI="https://$cred@$SRVURI"              
+      wget  $SRVFULLURI -O $ZIPFILENAME --progress=bar:force 2>&1 | progressfilt   
+      SRVFOLDERNAME=$(unzip -Z -1 $fname | head -1 | cut -d "/" -f2)
+      /usr/bin/unzip -o $ZIPFILENAME &> /dev/null 
+      if [[ ! $3 == "--noclean" ]]; then
+         rm -rf $ZIPFILENAME &> /dev/null 
+      fi
+      exoprint_suc "$SRVFOLDERNAME has been created !"
 }
-###################PRIVATE###################################
+
+# @Private: [UI] Hide wget Useless Informations
 progressfilt ()
 {
     local flag=false c count cr=$'\r' nl=$'\n'
@@ -344,148 +244,95 @@ progressfilt ()
         fi
     done
 }
-##############################################################
-function tstart(){
-   export tcloader="tomcat-juli.jar"
-  if [ -f "$GATEIN_DIR" ]; then
-        ../start_eXo.sh $*
-        return
-   fi
-   export ERROR_COUNT=0
-   export  GATEIN_DIR="./gatein"
-   if [  -d "$GATEIN_DIR" ]; then
-       ./start_eXo.sh $*
-       return
-   fi
-   export  LOGS_DIR="./logs"
-   if [  -d "$LOGS_DIR" ]; then
-      ./start_eXo.sh $*
-       return
-   fi
-          ERROR_COUNT=1
 
-   if [[ ! $ERROR_COUNT == 0 ]]; then       
-       echo "Error, Check if you are working on Tomcat Directory!" 
-       return
-   fi
+# @Public: Run eXo Platform Server Instance
+function exostart() {
+    if [ $(isTomcat) = 0 -a  $(isJBoss) = 0  ]; then
+		exoprint_err "Please check you are working on eXo Platform server instance!"
+		return
+	fi
+	
+	if [ $(isTomcat) = 1 ]; then
+	   ./start_eXo.sh $*
+	   return
+	fi
+	
+	if [ $(isJBoss) = 1 ]; then
+	   ./bin/standalone.sh $*
+	   return
+	fi
+}
 
+# @Public: Stop eXo Platform Server Instance
+function exostop() {
+    if [ $(isTomcat) = 0 -a  $(isJBoss) = 0  ]; then
+		exoprint_err "Please check you are working on eXo Platform server instance!"
+		return
+	fi
+	
+	if [ $(isTomcat) = 1 ]; then
+	   ./stop_eXo.sh $*
+	   return
+	fi
+	if [[ $1 == "--force" ]]; then
+         kill -9 $(lsof -t -i:8080) &> /dev/null
+         exoprint_suc "Server process has been killed!"
+    else
+		 exoprint_suc "Server has been stopped!"
+    fi
 }
-function tstop(){
-   export tcloader="tomcat-juli.jar"
-  if [ ! -f "$GATEIN_DIR" ]; then
-        ../stop_eXo.sh
-        return
-   fi
-   export ERROR_COUNT=0
-   export  GATEIN_DIR="./gatein"
-   if [ ! -d "$GATEIN_DIR" ]; then
-       ./stop_eXo.sh
-       return
-   fi
-   export  LOGS_DIR="./logs"
-   if [ ! -d "$LOGS_DIR" ]; then
-      ./stop_eXo.sh
-       return
-   fi
 
-
-   if [[ ! $ERROR_COUNT == 0 ]]; then       
-       echo "Error, Check if you are working on Tomcat Directory!" 
-       return
-   fi
-}
-function jstart(){
-./bin/standalone.sh $*
-}
-function tkill(){
- t=$(lsof  -t -i:8080)
-  if [[ -z "$t" ]]; then
-kill -9 "${t[0]}" &> /dev/null
-echo "Tomcat process killed!"
-  else 
-     echo "No Tomcat process!"
-  fi
-}
-function jkill(){
- t="$(jps | grep jboss-modules)";
-a=($(echo "$t" | tr ' ' '\n'))
-  if [[ ! $a=="" ]]; then
-kill -9 "${a[0]}" &> /dev/null
-echo "jBoss process killed!"
-  else 
-     echo "No jBoss process!"
-  fi
-}
-function tcas(){
-   export tcloader="./bin/tomcat-juli.jar"
-      if [ ! -f "$tcloader" ]; then
-       echo "Error, Please make sure you are working on Tomcat Server!"
-      return 
-   fi
-      tkill &> /dev/null
-      unzip -n ~/.exocmd/eXo_cas-server_3.5.zip -d ../ &> /dev/null
+# @Public: Add CAS SSO to eXo Platform Server Instance
+function exossocas(){
+    if [ $(isTomcat) = 0 -a  $(isJBoss) = 0  ]; then
+		exoprint_err "Please check you are working on eXo Platform server instance!"
+		return
+	fi
+    if [ $(isJBoss) = 0 ]; then
+	   exoprint_warn "Not yet supported For JBoss Server!"
+	   return
+	fi
+      exostop &> /dev/null
+      unzip -n "~/.exocmd/eXo_cas-server_3.5.zip" -d ../ &> /dev/null
       if [[ $1 == "undo" ]]; then 
         ./addon uninstall exo-cas
       else
        ./addon install exo-cas
       fi
-
-       mkdir -p conf/portal &> /dev/null
-           if [[ $1 == "undo" ]]; then 
-                 cp -rf ~/.exocmd/sso/sso_agent_def.xml conf/portal/configuration.xml &> /dev/null
-           else
-                 cp -rf ~/.exocmd/sso/sso_agent_configuration.xml conf/portal/configuration.xml &> /dev/null
-           fi
-           jar -uvf  ./lib/sso-agent-*.jar conf/portal/configuration.xml &> /dev/null
-           if [[ $1 == "undo" ]]; then 
-                 cp -rf ~/.exocmd/sso/sso-integration_def.xml conf/portal/configuration.xml &> /dev/null
-           else
-                 cp -rf ~/.exocmd/sso/sso-integration_configuration.xml conf/portal/configuration.xml &> /dev/null
-           fi
-          jar -uvf  ./lib/sso-integration-*.jar conf/portal/configuration.xml &> /dev/null
-          export isAlr=""
-          rm -rf conf/portal &> /dev/null
-          if [[ -f gatein/conf/exo.properties ]]; then
-              export isAlr="$( cat gatein/conf/exo.properties | grep gatein.sso.cas.server)"
-          else 
-              cp gatein/conf/exo-sample.properties gatein/conf/exo.properties &> /dev/null
-          fi
-          if [[  $isAlr == "" ]]; then        
-              cat ~/.exocmd/sso/cas_exo.properties >> gatein/conf/exo.properties
-          fi
-          if [[ $1 == "undo" ]]; then 
-               echo "Your server is now set as Default!"
-            else
+      mkdir -p conf/portal &> /dev/null
+      if [[ $1 == "undo" ]]; then 
+           cp -rf ~/.exocmd/sso/sso_agent_def.xml conf/portal/configuration.xml &> /dev/null
+      else
+           cp -rf ~/.exocmd/sso/sso_agent_configuration.xml conf/portal/configuration.xml &> /dev/null
+      fi
+      jar -uvf  ./lib/sso-agent-*.jar conf/portal/configuration.xml &> /dev/null
+      if [[ $1 == "undo" ]]; then 
+		   cp -rf ~/.exocmd/sso/sso-integration_def.xml conf/portal/configuration.xml &> /dev/null
+      else
+           cp -rf ~/.exocmd/sso/sso-integration_configuration.xml conf/portal/configuration.xml &> /dev/null
+      fi
+      jar -uvf  ./lib/sso-integration-*.jar conf/portal/configuration.xml &> /dev/null
+      isAlr=""
+      rm -rf conf/portal &> /dev/null
+      if [[ -f gatein/conf/exo.properties ]]; then
+         isAlr="$( cat gatein/conf/exo.properties | grep gatein.sso.cas.server)"
+      else 
+         cp gatein/conf/exo-sample.properties gatein/conf/exo.properties &> /dev/null
+      fi
+      if [[  $isAlr == "" ]]; then        
+          cat ~/.exocmd/sso/cas_exo.properties >> gatein/conf/exo.properties
+      fi
+      if [[ $1 == "undo" ]]; then 
+            echo "Your server is now set as Default!"
+      else
       echo "PLF Server Path: $(pwd)"
       echo "CAS Server Path: $(realpath ../cas-server)"
-      echo "Your server is now set with CAS Server!"
-         if [[ $1 == "run" ]]; then
+      exoprint_suc "Your server is now set with CAS Server!"
+         if [[ $1 == "--run" ]]; then
           ../cas-server/bin/startup.sh
          fi 
-       fi 
+      fi 
 }
-###################################################################################
-function tinject() {
-     if [[ ! $tworking ==  "" ]]; then 
-          return
-     fi 
-     export tcloader="./bin/tomcat-juli.jar"
-     if [ ! -f "$tcloader" ]; then
-       echo "Make you sure that you are working on Tomcat !" 
-       return
-     fi
-    
-    echo "Injecting $1 File..."
-    if [[ ${1#*.} == "war" ]]; then
-      cp "$(realpath $1)" ./webapps/ 
-    fi
-    if [[ ${1#*.} == "jar" ]]; then
-      cp "$(realpath $1)" ./lib/ 
-    fi
-    echo "$1 has been injected successfully!"
-   
-}
-
 ###################################################################################
 function cdev() {
   git clone "https://github.com/exodev/$1"
@@ -516,7 +363,7 @@ function devinject() {
       return 
   fi
   $SRVDIR/stop_eXo.sh &> /dev/null
-  fuser -k 8080/tcp &> /dev/null
+     kill -9 $(lsof -t -i:8080) &> /dev/null
     echo "Injecting $1 File..."
     if [[ ${1#*.} == "war" ]]; then
       cp "$(realpath $1)" $SRVDIR/webapps/ 
@@ -991,6 +838,22 @@ function exohelp(){
    echo "-- cadd:"
    echo "       Usage:   cadd repo_name" Clone exo-addons Github Repo
 }
+
+# @Private: Print Error Message
+function exoprint_err(){
+   echo $(tput setaf 1) "Error:$(tput init) $1" 
+}
+
+# @Private: Print Success Message
+function exoprint_suc(){
+   echo $(tput setaf 2) "Success:$(tput init) $1" 
+}
+
+# @Private: Print Warning Message
+function exoprint_warn(){
+   echo $(tput setaf 3) "Warning:$(tput init) $1" 
+}
+
 
 
 
