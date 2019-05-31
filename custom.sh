@@ -71,9 +71,9 @@ function tomcatdataclear() {
     GATEIN_DIR="./gatein"
     LOGS_DIR="./logs"
     TMP_DIRECTORY="./tmp"    
-	rm -rf "$LOGS_DIR/*" &> \dev\null
-    rm -rf "$GATEIN_DIR/data" &> \dev\null
-    rm -rf "$TMP_DIRECTORY/*" &> \dev\null
+	rm -rf "$LOGS_DIR/*" &> /dev/null
+    rm -rf "$GATEIN_DIR/data" &> /dev/null
+    rm -rf "$TMP_DIRECTORY/*" &> /dev/null
     exoprint_suc "eXo Tomcat Server Data has been cleared !" 
 }
 
@@ -82,9 +82,9 @@ function jbossdataclear() {
     GATEIN_DIR="./standalone/data"
     LOGS_DIR="./standalone/log"
     TMP_DIRECTORY="./standalone/tmp"
-	rm -rf "$LOGS_DIR/*" &> \dev\null
-    rm -rf "$GATEIN_DIR/data" &> \dev\null
-    rm -rf "$TMP_DIRECTORY/*" &> \dev\null
+	rm -rf "$LOGS_DIR/*" &> /dev/null
+    rm -rf "$GATEIN_DIR/data" &> /dev/null
+    rm -rf "$TMP_DIRECTORY/*" &> /dev/null
     exoprint_suc "eXo JBoss Server Data has been cleared !" 
 }
 
@@ -93,14 +93,44 @@ function tomcatdatadump() {
     GATEINDATA_DIR="./gatein/data"
     LOGS_DIR="./logs"
     TMP_DIRECTORY="./tmp"    
-    rm -rf "DATABACKUP" &> \dev\null
-    mkdir -p "DATABACKUP/gatein/data/" &> \dev\null
-    mkdir -p "DATABACKUP/logs" &> \dev\null
-    mkdir -p "DATABACKUP/tmp" &> \dev\null   
-    mv "$LOGS_DIR/*" "DATABACKUP/logs/" &> \dev\null
-    mv "$GATEINDATA_DIR/*" "DATABACKUP/gatein/data/" &> \dev\null
-    mv "$TMP_DIRECTORY/*" "DATABACKUP/tmp/" &> \dev\null
+    rm -rf "DATABACKUP" &> /dev/null
+    mkdir -p "DATABACKUP/gatein/data/" &> /dev/null
+    mkdir -p "DATABACKUP/logs" &> /dev/null
+    mkdir -p "DATABACKUP/tmp" &> /dev/null   
+    mv "$LOGS_DIR/*" "DATABACKUP/logs/" &> /dev/null
+    mv "$GATEINDATA_DIR/*" "DATABACKUP/gatein/data/" &> /dev/null
+    mv "$TMP_DIRECTORY/*" "DATABACKUP/tmp/" &> /dev/null
     exoprint_suc "eXo Tomcat Server Data has been dumped !" 
+}
+
+# @Private: Tomcat Data Restore
+function tomcatdatarestore() {
+    GATEINDATA_DIR="./gatein/data"
+    LOGS_DIR="./logs"
+    TMP_DIRECTORY="./tmp"    
+    rm -rf "$GATEINDATA_DIR/" &> /dev/null
+    rm -rf "$LOGS_DIR" &> /dev/null
+    rm -rf "$TMP_DIRECTORY" &> /dev/null
+    mv "DATABACKUP/logs/*" "$LOGS_DIR/" &> /dev/null
+    mv "DATABACKUP/gatein/data/*" "$GATEINDATA_DIR/" &> /dev/null
+    mv "DATABACKUP/tmp/*" "$TMP_DIRECTORY/" &> /dev/null
+    rm -rf "DATABACKUP" &> /dev/null
+    exoprint_suc "eXo Tomcat Server Data has been restored !" 
+}
+
+# @Private: JBoss Data Restore
+function jbossdatarestore() {
+    GATEINDATA_DIR="./standalone/data"
+    LOGS_DIR="./standalone/log"
+    TMP_DIRECTORY="./standalone/tmp"  
+    rm -rf "$GATEINDATA_DIR/" &> /dev/null
+    rm -rf "$LOGS_DIR" &> /dev/null
+    rm -rf "$TMP_DIRECTORY" &> /dev/null
+    mv "DATABACKUP/logs/*" "$LOGS_DIR/" &> /dev/null
+    mv "DATABACKUP/gatein/data/*" "$GATEINDATA_DIR/" &> /dev/null
+    mv "DATABACKUP/tmp/*" "$TMP_DIRECTORY/" &> /dev/null
+    rm -rf "DATABACKUP" &> /dev/null
+    exoprint_suc "eXo JBoss Server Data has been restored !" 
 }
 
 # @Private: JBoss Data Dump
@@ -108,13 +138,13 @@ function jbossdatadump() {
     GATEINDATA_DIR="./standalone/data"
     LOGS_DIR="./standalone/log"
     TMP_DIRECTORY="./standalone/tmp"
-    rm -rf "DATABACKUP" &> \dev\null
-    mkdir -p "DATABACKUP/gatein/data/" &> \dev\null
-    mkdir -p "DATABACKUP/logs" &> \dev\null
-    mkdir -p "DATABACKUP/tmp" &> \dev\null   
-    mv "$LOGS_DIR/*" "DATABACKUP/logs/" &> \dev\null
-    mv "$GATEINDATA_DIR/*" "DATABACKUP/gatein/data/" &> \dev\null
-    mv "$TMP_DIRECTORY/*" "DATABACKUP/tmp/" &> \dev\null
+    rm -rf "DATABACKUP" &> /dev/null
+    mkdir -p "DATABACKUP/gatein/data/" &> /dev/null
+    mkdir -p "DATABACKUP/logs" &> /dev/null
+    mkdir -p "DATABACKUP/tmp" &> /dev/null   
+    mv "$LOGS_DIR/*" "DATABACKUP/logs/" &> /dev/null
+    mv "$GATEINDATA_DIR/*" "DATABACKUP/gatein/data/" &> /dev/null
+    mv "$TMP_DIRECTORY/*" "DATABACKUP/tmp/" &> /dev/null
     exoprint_suc "eXo JBoss Server Data has been dumped !" 
 }
 
@@ -324,7 +354,7 @@ function exossocas(){
           cat ~/.exocmd/sso/cas_exo.properties >> gatein/conf/exo.properties
       fi
       if [[ $1 == "undo" ]]; then 
-            echo "Your server is now set as Default!"
+            echo "Your server is now set to default!"
       else
       echo "PLF Server Path: $(pwd)"
       echo "CAS Server Path: $(realpath ../cas-server)"
@@ -334,29 +364,29 @@ function exossocas(){
          fi 
       fi 
 }
-###################################################################################
-function cdev() {
+
+# @Public: Clone eXo-Dev Repository
+function exocldev() {
   git clone "https://github.com/exodev/$1"
   cd $1
 }
-###################################################################################
-function cadd() {
+
+# @Public: Clone eXo-Addons Repository
+function exocladd() {
   git clone "https://github.com/exo-addons/$1"
   cd $1
 }
-###################################################################################
-function cplf() {
+
+# @Public: Clone eXoPlatform Repository
+function exoclplf() {
   git clone "https://github.com/exoplatform/$1"
   cd $1
 }
-###################################################################################
-function cpush() {
-  git push origin $1
-}
-###################################################################################
-function devinject() {
+
+# @Public: Inject JAR/WAR to selected eXo Server instance
+function exodevinject() {
   if [[ -z $SRVDIR ]]; then
-      echo "Please set SRVDIR value !";
+      exoprint_err "Please set \$SRVDIR value !";
       return
   fi
   if [ ! -f "$SRVDIR/bin/tomcat-juli.jar" ]; then
@@ -364,21 +394,22 @@ function devinject() {
       return 
   fi
   $SRVDIR/stop_eXo.sh &> /dev/null
-     kill -9 $(lsof -t -i:8080) &> /dev/null
-    echo "Injecting $1 File..."
-    if [[ ${1#*.} == "war" ]]; then
-      cp "$(realpath $1)" $SRVDIR/webapps/ 
-      rm $SRVDIR/webapps/${1%*.}
-    fi
-    if [[ ${1#*.} == "jar" ]]; then
-      cp -rf "$(realpath $1)" $SRVDIR/lib/ 
-    fi
-    echo "$1 has been injected successfully!"  
+  kill -9 $(lsof -t -i:8080) &> /dev/null
+  echo "Injecting $1 File..."
+  if [[ ${1#*.} == "war" ]]; then
+      cp "$(realpath $1)" "$SRVDIR/webapps/"
+      rm "$SRVDIR/webapps/${1%*.}"
+  fi
+  if [[ ${1#*.} == "jar" ]]; then
+      cp -rf "$(realpath $1)" "$SRVDIR/lib/" 
+  fi
+  exoprint_suc "$1 has been injected successfully!"  
 }
-###################################################################################
-function devstart() {
+
+# @Public: Start selected eXo Server instance Silently
+function exodevstart() {
   if [[ -z $SRVDIR ]]; then
-      echo "Please set SRVDIR value !";
+      exoprint_err "Please set \$SRVDIR value !";
       return
   fi
   if [ ! -f "$SRVDIR/bin/tomcat-juli.jar" ]; then
@@ -388,79 +419,81 @@ function devstart() {
      $SRVDIR/start_eXo.sh -b $* &> /dev/null
 }
 
-###################################################################################
-function devstop() {
-  if [[ -z $SRVDIR ]]; then
-      echo "Please set SRVDIR value !";
+# @Public: Stop selected eXo Server instance
+function exodevstop() {
+  if [[ -z "$SRVDIR" ]]; then
+      exoprint_err "Please set \$SRVDIR value !";
       return
   fi
   if [ ! -f "$SRVDIR/bin/tomcat-juli.jar" ]; then
-      echo "Error, Please make sure you are working on Tomcat Server!"
+    exoprint_err "Please make sure you are working on Tomcat Server!"
       return 
   fi
-     $SRVDIR/stop_eXo.sh &
-     fuser -k 8080/tcp &> /dev/null
+  "$SRVDIR/stop_eXo.sh" &
+  kill -9 $(lsof -t -i:8080) &> /dev/null
 }
 
-###################################################################################
+# @Public: Restart selected eXo Server instance
 function devrestart() {
-  devstop
-  devstart
+  exodevstop
+  exodevstart
 }
 
-###################################################################################
-function devsync() {
-  if [[ -z $SRVDIR ]]; then
-      echo "Please set SRVDIR value !";
+# @Public: Synchronize selected eXo Server instance's log file
+function exodevsync() {
+  if [[ -z "$SRVDIR" ]]; then
+      exoprint_err "Please set \$SRVDIR value !"
       return
   fi
   if [ ! -f "$SRVDIR/bin/tomcat-juli.jar" ]; then
-      echo "Error, Please make sure you are working on Tomcat Server!"
+      exoprint_err "Please make sure you are working on Tomcat Server!"
       return 
   fi
   if [[ ! -f $SRVDIR/logs/catalina.out ]]; then
-      echo "Please start the server!";
+      exoprint_err "Please start the server!"
       return
   fi
-     tail -f $SRVDIR/logs/platform.log
+  tail -f $SRVDIR/logs/platform.log
 }
-###################################################################################
-function tldap(){
+
+# @Public: Enable LDAP Integration For eXo Platform
+function exoidldap(){
    export tcloader="./bin/tomcat-juli.jar"
       if [ ! -f "$tcloader" ]; then
-       echo "Error, Please make sure you are working on Tomcat Server!"
+       exoprint_err "Please make sure you are working on Tomcat Server!"
       return 
    fi
-   tkill &> /dev/null
+   exostop &> /dev/null
    echo "Default Config: cn=admin,dc=exosupport,dc=com || Password: root" 
    mkdir -p gatein/conf/portal/portal &> /dev/null
    cp -rf ~/.exocmd/openldap/configuration.xml gatein/conf/portal/portal/configuration.xml &> /dev/null
    cp -rf ~/.exocmd/openldap/picketLink-idm-configuration.xml gatein/conf/portal/portal/picketLink-idm-configuration.xml &> /dev/null
    cp -rf ~/.exocmd/openldap/picketlink-idm-ldap-config.xml gatein/conf/portal/portal/picketlink-idm-ldap-config.xml &> /dev/null
    cp -rf ~/.exocmd/openldap/sync.xml gatein/conf/portal/portal/sync.xml &> /dev/null
-   if [[ $1 == "undo" ]]; then 
-     rm -rf gatein/conf/portal/portal &> /dev/null
-     echo "Your server is now set to Default!"
-     return
+   if [[ $1 == "--undo" ]]; then 
+		rm -rf gatein/conf/portal/portal &> /dev/null
+		exoprint_suc "Your server is now set to Default!"
+		return
    fi
-   export isAlr=""
-          if [[ -f gatein/conf/exo.properties ]]; then
-              export isAlr="$( cat gatein/conf/exo.properties | grep exo.idm.externalStore.update.onlogin=true)"
-          else 
-              cp gatein/conf/exo-sample.properties gatein/conf/exo.properties &> /dev/null
-          fi
-          if [[  $isAlr == "" ]]; then        
-             cat ~/.exocmd/openldap/ldap_exo.properties >> gatein/conf/exo.properties
-          fi
-     if [[ $1 == "undo" ]]; then 
-               echo "Your server is now set as Default!"
-            else
-      echo "PLF Server Path: $(pwd)"
-      echo "Your server is now set with OpenLDAP!"
-     fi
+   isAlr=""
+   if [[ -f gatein/conf/exo.properties ]]; then
+       isAlr="$( cat gatein/conf/exo.properties | grep exo.idm.externalStore.update.onlogin=true)"
+   else
+       cp gatein/conf/exo-sample.properties gatein/conf/exo.properties &> /dev/null
+   fi
+   if [[  $isAlr == "" ]]; then        
+       cat ~/.exocmd/openldap/ldap_exo.properties >> gatein/conf/exo.properties
+   fi
+   if [[ $1 == "--undo" ]]; then 
+       exoprint_suc "Your server is now set to default!"
+   else
+       echo "PLF Server Path: $(pwd)"
+	   exoprint_suc "Your server is now set with OpenLDAP!"
+   fi
 }
-###################################################################################
-function tad(){
+
+# @Public: Enable Active Directory Integration For eXo Platform
+function exoidad(){
    export tcloader="./bin/tomcat-juli.jar"
       if [ ! -f "$tcloader" ]; then
        echo "Error, Please make sure you are working on Tomcat Server!"
@@ -473,102 +506,97 @@ function tad(){
    cp -rf ~/.exocmd/activedirectory/picketLink-idm-configuration.xml gatein/conf/portal/portal/picketLink-idm-configuration.xml &> /dev/null
    cp -rf ~/.exocmd/activedirectory/picketlink-idm-ldap-config.xml gatein/conf/portal/portal/picketlink-idm-ldap-config.xml &> /dev/null
    cp -rf ~/.exocmd/activedirectory/sync.xml gatein/conf/portal/portal/sync.xml &> /dev/null
-   if [[ $1 == "undo" ]]; then 
-     rm -rf gatein/conf/portal/portal &> /dev/null
-     echo "Your server is now set to Default!"
-     return
+   if [[ $1 == "--undo" ]]; then 
+		rm -rf gatein/conf/portal/portal &> /dev/null
+		exoprint_suc "Your server is now set to Default!"
+		return
    fi
-   export isAlr=""
-          if [[ -f gatein/conf/exo.properties ]]; then
-              export isAlr="$( cat gatein/conf/exo.properties | grep exo.idm.externalStore.update.onlogin=true)"
-          else 
-              cp gatein/conf/exo-sample.properties gatein/conf/exo.properties &> /dev/null
-          fi
-          if [[  $isAlr == "" ]]; then        
-             cat ~/.exocmd/activedirectory/ad_exo.properties >> gatein/conf/exo.properties
-          fi
-     if [[ $1 == "undo" ]]; then 
-               echo "Your server is now set as Default!"
-            else
-      echo "PLF Server Path: $(pwd)"
-      echo "Your server is now set with Active Directory!"
-     fi
+   isAlr=""
+   if [[ -f gatein/conf/exo.properties ]]; then
+       isAlr="$( cat gatein/conf/exo.properties | grep exo.idm.externalStore.update.onlogin=true)"
+   else
+       cp gatein/conf/exo-sample.properties gatein/conf/exo.properties &> /dev/null
+   fi
+   if [[  $isAlr == "" ]]; then        
+       cat ~/.exocmd/activedirectory/ad_exo.properties >> gatein/conf/exo.properties
+   fi
+   if [[ $1 == "--undo" ]]; then 
+       exoprint_suc "Your server is now set to default!"
+   else
+       echo "PLF Server Path: $(pwd)"
+	   exoprint_suc "Your server is now set with Active Directory!"
+   fi
 }
-###################################################################################
-function ldapinject(){
-sudo apt-get install -y gpw &> /dev/null
-echo -n Min ID: 
-read lwid
-echo -n Max ID: 
-read grwid
-strlen=4 
-if [[ $lwid > $grwid  ]]; then 
-   echo "Invalid Min and Max ID values!"
-   return
-fi
-echo -n "OpenLDAP Domain Config (Example dc=exosupport,dc=com):" 
-read -s dconfig
-echo ""
-echo -n OpenLDAP Admin Password: 
-read -s passadmin
-echo ""
-echo -n Users Password: 
-read -s password
-echo ""
-if [[ ${#password} < 6 ]]; then
-  echo "Users Password Invalid ! Min Password length is : 6"
-  return
-fi
-if [[ -z "$dconfig" ]]; then
-   dconfig="dc=exosupport,dc=com"
-fi
 
-if [[ ! $1 == "" ]]; then 
-    strlen=$1
-fi
-mdp=$(echo -n "$password" | sha1sum | awk '{print $1}')
-for ((i=$lwid;i<=$grwid;i++)); do
-fname="$(/usr/bin/gpw 1 $strlen)"
-lname="$(/usr/bin/gpw 1 $strlen)"
-name="$fname $lname" 
-uname="$fname$lname" 
-echo "$i> Injecting: dn: cn=$name,ou=users,$dconfig"
-echo "dn: cn=$name,ou=users,$dconfig
-objectClass: top
-objectClass: account
-uid: $uname
-objectClass: posixAccount
-uidNumber: $i
-gidNumber: 500
-homeDirectory: /home/users/$uname
-loginShell: /bin/bash
-gecos: $uname
-userPassword: $mdp" > tmp.ldif
-ldapadd -x -w $passadmin -D "cn=admin,$dconfig" -f tmp.ldif
-done
-rm -rf tmp.ldif &> /dev/null
-echo "Finished !"
+# @Public: Inject Users to LDAP Server
+function exoldapinject(){
+   count=$(dpkg -l | grep gpw  | wc -l)
+   if [[ "$count" == "0" ]]; then
+      exoprint_err "gpw is not installed !"
+      return
+   fi
+   echo -n Min User ID: 
+   read lwid
+   echo -n Max User ID: 
+   read grwid
+   strlen=4 
+   if [[ $lwid > $grwid  ]]; then 
+	   echo "Invalid Min and Max ID values!"
+       return
+   fi
+   echo -n "OpenLDAP Domain Config (Example dc=exosupport,dc=com):" 
+   read -s dconfig
+   echo ""
+   echo -n LDAP Admin Password: 
+   read -s passadmin
+   echo ""
+   echo -n Users Password: 
+   read -s password
+   echo ""
+   if [[ ${#password} < 6 ]]; then
+	   echo "Users Password Invalid ! Min Password length is : 6"
+       return
+   fi
+   if [[ -z "$dconfig" ]]; then
+       dconfig="dc=exosupport,dc=com"
+   fi
+   if [[ ! $1 == "" ]]; then 
+       strlen=$1
+   fi
+   mdp=$(echo -n "$password" | sha1sum | awk '{print $1}')
+   for ((i=$lwid;i<=$grwid;i++)); do
+       fname="$(/usr/bin/gpw 1 $strlen)"
+       lname="$(/usr/bin/gpw 1 $strlen)"
+       name="$fname $lname" 
+       uname="$fname$lname" 
+       echo "$i> Injecting: dn: cn=$name,ou=users,$dconfig"
+       echo "dn: cn=$name,ou=users,$dconfig
+       objectClass: top
+       objectClass: account
+       uid: $uname
+       objectClass: posixAccount
+       uidNumber: $i
+       gidNumber: 500
+       homeDirectory: /home/users/$uname
+       loginShell: /bin/bash
+       gecos: $uname
+       userPassword: $mdp" > tmp.ldif
+       ldapadd -x -w $passadmin -D "cn=admin,$dconfig" -f tmp.ldif
+   done
+   rm -rf tmp.ldif &> /dev/null
+   exoprint_suc "Users have been injected !"
 }
 ###################################################################################
 function inject-spaces(){
 dt-install
 SHORT=Hpscv
 LONG=host,port,space,count,verbose
-
-# -temporarily store output to be able to check for errors
-# -activate advanced mode getopt quoting e.g. via “--options”
-# -pass arguments only via   -- "$@"   to separate them correctly
 PARSED=`getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@"`
 if [[ $? -ne 0 ]]; then
     # e.g. $? == 1
     #  then getopt has complained about wrong arguments to stdout
     exit 2
 fi
-
-# use eval with "$PARSED" to properly handle the quoting
-#eval set -- "$PARSED"
-
-# now enjoy the options in order and nicely split until we see --
 while true; do
     case "$1" in
         -h|--help)
@@ -685,25 +713,13 @@ usage-sapces(){
 	exit 1
 }
 ###################################################################################
-function inject-users(){
-dt-install
+function exoinjectusers(){
 SHORT=Hpscv
 LONG=host,port,users,count,verbose
-
-# -temporarily store output to be able to check for errors
-# -activate advanced mode getopt quoting e.g. via “--options”
-# -pass arguments only via   -- "$@"   to separate them correctly
 PARSED=`getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@"`
 if [[ $? -ne 0 ]]; then
-    # e.g. $? == 1
-    #  then getopt has complained about wrong arguments to stdout
-    exit 2
+    exoprint_err "Could not parse arguments"
 fi
-
-# use eval with "$PARSED" to properly handle the quoting
-#eval set -- "$PARSED"
-
-# now enjoy the options in order and nicely split until we see --
 while true; do
     case "$1" in
         -h|--help)
@@ -738,34 +754,26 @@ while true; do
             ;;
     esac
 done
-
 if [ -z "$nbOfUsers" ]; then
-    echo "Error : missing number of profiles to create (-c)"
-    echo ""
-    usage
+    exoprint_err "missing number of profiles to create (-c)"
+    return
 fi
-
 if [ -z "$host" ]; then host="localhost"; fi
 if [ -z "$port" ]; then port="8080"; fi
 if [ -z "$user" ]; then user="user"; fi
-
 re='^[0-9]+$'
 if ! [[ $port =~ $re ]] ; then
-   echo "Error: port must be a number" >&2
-   exit 1
+   exoprint_err "port must be a number" >&2
+   return
 fi
 if ! [[ $nbOfUsers =~ $re ]] ; then
-   echo "Error: number of profiles must be a number" >&2
-   exit 1
+   exoprint_err "number of profiles must be a number" >&2
+   return
 fi
-
-
 userIndex=1
-
 until [ $userIndex -gt $nbOfUsers ]
 do
   echo $userIndex
-
   url="http://$host:$port/rest/private/v1/social/users"
  data="{\"id\": \"$userIndex\","
   data+="\"username\": \"$user$userIndex\","
@@ -774,16 +782,11 @@ do
   data+="\"firstname\": \"$user$userIndex\","
   data+="\"fullname\": \"$user$userIndex\","
   data+="\"email\": \"$user$userIndex@patricelove.org\"}"
-
   curlCmd="curl -s -X POST -u root:gtn -H \"Content-Type: application/json\" --data '$data' $url > /dev/null"
-
   echo "Create user $user$userIndex" 
   eval $curlCmd
-
   userIndex=$(($userIndex + 1))
 done
-
-
 }
 
 ###################################################################################
