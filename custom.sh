@@ -541,7 +541,7 @@ function exoldapinject(){
    read grwid
    strlen=4 
    if [[ $lwid > $grwid  ]]; then 
-	   echo "Invalid Min and Max ID values!"
+	   exoprint_err "Invalid Min and Max ID values!"
        return
    fi
    echo -n "OpenLDAP Domain Config (Example dc=exosupport,dc=com):" 
@@ -588,7 +588,6 @@ function exoldapinject(){
 }
 ###################################################################################
 function inject-spaces(){
-dt-install
 SHORT=Hpscv
 LONG=host,port,space,count,verbose
 PARSED=`getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@"`
@@ -676,18 +675,6 @@ done
 
 }
 
-###################################################################################
-function dt-install(){
-set -e
-echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-echo "                         eXo Data Injector                          " 
-echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{{{}}}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-if [[ ! -f  addon ]]; then
-   echo "Error: Please make sure you are working on eXo Platform Directory!"
-   exit
-fi
-./addon install exo-data-injectors
-}
 ###################################################################################
 usage-users(){
   echo "Usage : inject-users -c <nb_of_users>"
