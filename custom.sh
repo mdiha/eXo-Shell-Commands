@@ -212,8 +212,8 @@ function exoget(){
          ZIPFILENAME="plf-enterprise-jbosseap-standalone-$2.zip"
       fi
       SRVFULLURI="https://$cred@$SRVURI"              
-      wget  $SRVFULLURI -O $ZIPFILENAME --progress=bar:force 2>&1 | progressfilt 
-      unzip -Z -1 $ZIPFILENAME | head -1 cut -d "/" -f2 >"/tmp/tmp.txt"
+      wget  "$SRVFULLURI" -O "$ZIPFILENAME" --progress=bar:force 2>&1 | progressfilt 
+      unzip -Z -1 $ZIPFILENAME | head -1 | cut -d "/" -f2 >"/tmp/tmp.txt"
       SRVFOLDERNAME=$(< "/tmp/tmp.txt")	  
       /usr/bin/unzip -o $ZIPFILENAME &> /dev/null 
       if [[ ! $3 == "--noclean" ]]; then
