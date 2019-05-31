@@ -842,17 +842,17 @@ function exohelp(){
 
 # @Private: Print Error Message
 function exoprint_err(){
-   echo $(tput setaf 1) "Error:$(tput init) $1" 
+   echo "$(tput setaf 1)Error:$(tput init) $1" 
 }
 
 # @Private: Print Success Message
 function exoprint_suc(){
-   echo $(tput setaf 2) "Success:$(tput init) $1" 
+   echo "$(tput setaf 2)Success:$(tput init) $1" 
 }
 
 # @Private: Print Warning Message
 function exoprint_warn(){
-   echo $(tput setaf 3) "Warning:$(tput init) $1" 
+   echo "$(tput setaf 3)Warning:$(tput init) $1" 
 }
 
 
