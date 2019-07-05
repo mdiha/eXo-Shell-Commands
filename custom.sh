@@ -367,19 +367,19 @@ function exossocas(){
 
 # @Public: Clone eXo-Dev Repository
 function exocldev() {
-  git clone "https://github.com/exodev/$1"
+  git clone "git@github.com:exodev/$1.git"
   cd $1
 }
 
 # @Public: Clone eXo-Addons Repository
 function exocladd() {
-  git clone "https://github.com/exo-addons/$1"
+  git clone "git@github.com:exo-addons/$1.git"
   cd $1
 }
 
 # @Public: Clone eXoPlatform Repository
 function exoclplf() {
-  git clone "https://github.com/exoplatform/$1"
+  git clone "git@github.com:exoplatform/$1.git"
   cd $1
 }
 
