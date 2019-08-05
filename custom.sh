@@ -243,7 +243,7 @@ function exoget(){
       fi
       if [[ $2 ==  "latest" ]]; then
         if [[ $dntype == "jbosseap" ]]; then
-          exoprint_err "There is no snapshot version to Jboss Server !"
+          exoprint_err "There is no SNAPSHOT version For JBoss Server !"
           return
         fi
         dnversion="5.3.x-SNAPSHOT"
