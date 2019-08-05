@@ -834,12 +834,12 @@ function exohelp(){
    echo "       Usage:   inject-users -c <nb_of_users>."
    echo "-- inject-spaces:"
    echo "       Usage:   inject-spaces -c <nb_of_spaces>."
-   echo "-- cdev:"
-   echo "       Usage:   cdev repo_name" Clone exodev Github Repo
-   echo "-- cplf:"
-   echo "       Usage:   cplf repo_name" Clone exoplatform Github Repo
-   echo "-- cadd:"
-   echo "       Usage:   cadd repo_name" Clone exo-addons Github Repo
+   echo "-- exocldev:"
+   echo "       Usage:   exocldev repo_name" Clone exodev Github Repo
+   echo "-- exoclplf:"
+   echo "       Usage:   exoclplf repo_name" Clone exoplatform Github Repo
+   echo "-- exocladd:"
+   echo "       Usage:   exocladd repo_name" Clone exo-addons Github Repo
 }
 
 # @Private: Print Error Message
