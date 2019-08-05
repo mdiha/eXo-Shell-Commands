@@ -250,7 +250,6 @@ function exoget(){
       else
         dnversion="$2"
       fi
-
       SRVURI="repository.exoplatform.org/content/groups/private/com/exoplatform/platform/distributions/plf-enterprise-$dntype-standalone/$dnversion"
       ZIPFILENAME="plf-enterprise-$dntype-standalone-$dnversion.zip"
       SRVFULLURI="https://$cred@$SRVURI"
@@ -830,9 +829,9 @@ function exohelp(){
    echo "                exossocas <undo> : Remove cas integration from eXo platform."
    echo "-- ldapinject:"
    echo "       Usage:   ldapinject [<name_length:4>]: Inject Random users to OpenLDAP Server [ou=users,dc=exosupport,dc=com]."
-   echo "-- inject-users:"
+   echo "-- exoinjectusers:"
    echo "       Usage:   inject-users -c <nb_of_users>."
-   echo "-- inject-spaces:"
+   echo "-- exoinjectspaces:"
    echo "       Usage:   inject-spaces -c <nb_of_spaces>."
    echo "-- exocldev:"
    echo "       Usage:   exocldev repo_name" Clone exodev Github Repo
