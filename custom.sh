@@ -271,6 +271,7 @@ function exoget(){
       fi
       SRVFOLDERPATH="$(realpath "$SRVFOLDERNAME")"
       exoprint_suc "\e]8;;file://$SRVFOLDERPATH\a$SRVFOLDERNAME\e]8;;\a has been created !"
+      cd $SRVFOLDERPATH
 }
 
 # @Private: [UI] Hide wget Useless Informations
