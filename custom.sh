@@ -43,15 +43,15 @@ function exochangedb() {
     if [ $(isTomcat) = 0 -a  $(isJBoss) = 0  ]; then
 		exoprint_err "Please check you are working on eXo Platform server instance!"
 		return
-	fi
+	 fi
 
 	if [ $(isTomcat) = 1 ]; then
-	   tomcatchangedb
+	   tomcatchangedb $*
 	   return
 	fi
 
 	if [ $(isJBoss) = 1 ]; then
-	   jbosschangedb
+	   jbosschangedb $*
 	   return
 	fi
 }
@@ -199,7 +199,7 @@ function tomcatchangedb() {
      CONF_DIR="./conf"
      cp -rf "$CONF_DIR/server.xml" "$CONF_DIR/server.old.xml" &> /dev/null
      SOURCE_CONF="$CONF_DIR/server.xml"
-     switchdb
+     switchdb $*
 }
 
 # @Private: JBoss Change Database
@@ -207,7 +207,7 @@ function jbosschangedb() {
      CONF_DIR="./conf"
      cp -rf "$CONF_DIR/server.xml" "$CONF_DIR/server.old.xml" &> /dev/null
      SOURCE_CONF="$CONF_DIR/server.xml"
-     switchdb
+     switchdb $*
 }
 
 # @Public: Get eXo Platform Server instance From Repository
