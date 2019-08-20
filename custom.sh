@@ -407,6 +407,10 @@ function exoclplf() {
 
 # @Public: Inject JAR/WAR to selected eXo Server instance
 function exodevinject() {
+  if [[ -z "$1" ]]; then
+      exoprint_err "Please specify files !";
+      return
+  fi
   if [[ -z $SRVDIR ]]; then
       exoprint_err "Please set \$SRVDIR value !";
       return
