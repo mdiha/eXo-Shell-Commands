@@ -419,7 +419,7 @@ function exodevinject() {
   kill -9 $(lsof -t -i:8080) &> /dev/null
   echo "Injecting $1 File..."
   if [[ ${1#*.} == "war" ]]; then
-      cp "$(realpath $1)" "$SRVDIR/webapps/"
+      cp -f "$(realpath $1)" "$SRVDIR/webapps/"
       rm "$SRVDIR/webapps/${1%*.}"
   fi
   if [[ ${1#*.} == "jar" ]]; then
