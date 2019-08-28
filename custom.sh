@@ -593,6 +593,7 @@ function exoupdate() {
     git clone "$UPGITURL" "$WORKINGDIR/$FOLDERNAME" #&> /dev/null
   fi
   chmod +x "$WORKINGDIR/$FOLDERNAME/install.sh"  #&> /dev/null
+  source "$WORKINGDIR/custom.sh"
   "$WORKINGDIR/$FOLDERNAME/install.sh" && exoprint_suc "Update Success! " || exoprint_err "Error while updating! "
 }
 
