@@ -21,7 +21,7 @@ function exodataclear() {
 }
 
 # @Public: Dump DATA FOR TOMCAT & JBOSS
-function exodatadump() {
+function exodump() {
     if [ $(isTomcat) = 0 -a  $(isJBoss) = 0  ]; then
 		exoprint_err "Please check you are working on eXo Platform server instance!"
 		return
@@ -34,6 +34,24 @@ function exodatadump() {
 
 	if [ $(isJBoss) = 1 ]; then
 	   jbossdatadump
+	   return
+	fi
+}
+
+# @Public: Dump DATA FOR TOMCAT & JBOSS
+function exodumprestore() {
+    if [ $(isTomcat) = 0 -a  $(isJBoss) = 0  ]; then
+		exoprint_err "Please check you are working on eXo Platform server instance!"
+		return
+	fi
+
+	if [ $(isTomcat) = 1 ]; then
+	   tomcatdatadumprestore
+	   return
+	fi
+
+	if [ $(isJBoss) = 1 ]; then
+	   jbossdatadumprestore
 	   return
 	fi
 }
@@ -102,6 +120,8 @@ function tomcatdatadump() {
     mv "$TMP_DIRECTORY/*" "DATABACKUP/tmp/" &> /dev/null
     exoprint_suc "eXo Tomcat Server Data has been dumped !"
 }
+
+# @Private: Tomcat Data Dump
 
 # @Private: Tomcat Data Restore
 function tomcatdatarestore() {
@@ -613,20 +633,18 @@ function exoldapinject(){
    exoprint_suc "Users have been injected !"
 }
 ###################################################################################
-function inject-spaces(){
-SHORT=Hpscv
-LONG=host,port,space,count,verbose
+function exoinjectspaces(){
+SHORT=Hpscva
+LONG=host,port,spaceprefix,count,verbose,auth
+if [[ $1 == "-h" ]] || [[ "$1" == "--help" ]]; then usage-spaces; return; fi
 PARSED=`getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@"`
 if [[ $? -ne 0 ]]; then
     # e.g. $? == 1
     #  then getopt has complained about wrong arguments to stdout
-    exit 2
+    return
 fi
 while true; do
     case "$1" in
-        -h|--help)
-            usage-spaces
-            ;;
         -H|--host)
             host="$2"
             shift 2
@@ -635,8 +653,8 @@ while true; do
             port="$2"
             shift 2
             ;;
-        -s|--space)
-            space="$2"
+        -s|--spaceprefix)
+            spaceprefix="$2"
             shift 2
             ;;
         -c|--count)
@@ -647,33 +665,38 @@ while true; do
             verbose=y
             shift
             ;;
+        -a|--auth)
+           auth="$2"
+           shift 2
+            ;;
         "")
             break
             ;;
         *)
-            echo "Programming error"
-            exit 3
+            exoprint_err "Programming error"
+            return
             ;;
     esac
 done
-
 if [ -z "$nbOfSpaces" ]; then
-    echo "Error : missing number of profiles to create (-c)"
+    exoprint_err "Missing number of profiles to create (-c)"
     echo ""
-    usage
+    usage-spaces
 fi
 
 if [ -z "$host" ]; then host="localhost"; fi
 if [ -z "$port" ]; then port="8080"; fi
-if [ -z "$space" ]; then space="space"; fi
+if [ -z "$spaceprefix" ]; then spaceprefix="space"; fi
+if [ -z "$auth" ]; then auth="root:gtn"; fi
+
 
 re='^[0-9]+$'
 if ! [[ $port =~ $re ]] ; then
-   echo "Error: port must be a number" >&2
+   exoprint_err "Port must be a number" >&2
    exit 1
 fi
 if ! [[ $nbOfSpaces =~ $re ]] ; then
-   echo "Error: number of profiles must be a number" >&2
+   exoprint_err "Number of profiles must be a number" >&2
    exit 1
 fi
 
@@ -682,19 +705,15 @@ spaceIndex=1
 
 until [ $spaceIndex -gt $nbOfSpaces ]
 do
-  echo $spaceIndex
-
   url="http://$host:$port/rest/private/v1/social/spaces"
-  data="{\"displayName\": \"$space$spaceIndex\","
-  data+="\"description\": \"$space$spaceIndex\","
+  data="{\"displayName\": \"$spaceprefix$spaceIndex\","
+  data+="\"description\": \"$spaceprefix$spaceIndex\","
   data+="\"visibility\": \"public\","
   data+="\"subscription\": \"open\"}"
-
-  curlCmd="curl -s -X POST -u root:gtn -H \"Content-Type: application/json\" --data '$data' $url > /dev/null"
-
-  echo "Create space $space$spaceIndex"
-  eval $curlCmd
-
+  curlCmd="curl -s -w '%{response_code}' -X POST -u "$auth" -H \"Content-Type: application/json\" --data '$data' $url | grep -o  '[1-9][0-9][0-9]'"
+  printf "Creating space $spaceprefix$spaceIndex..."
+  httprs=$(eval $curlCmd)
+  if [[ "$httprs" =~ "200" ]]; then  exoprint_suc "OK"; else exoprint_err "Fail"; fi
   spaceIndex=$(($spaceIndex + 1))
 done
 
@@ -703,41 +722,41 @@ done
 
 ###################################################################################
 usage-users(){
-  echo "Usage : inject-users -c <nb_of_users>"
+  echo " Usage : exoinjectusers -c <nb_of_users>"
   echo ""
   echo "    -h| --help           help"
-  echo "    -H| --host           server hostname"
-  echo "    -p| --port           server port"
-  echo "    -u| --users          prefix name of the injected users"
+  echo "    -H| --host           server hostname Default: localhost"
+  echo "    -p| --port           server port Default: 8080"
+  echo "    -u| --userprefix     prefix of the injected users Default: user"
+  echo "    -P| --userpassword   password of the injected users Default: 123456"
+  echo "    -a| --auth           Root credentials Default: root:gtn"
   echo "    -c| --count          number of users to create"
   echo ""
-	exit 1
 }
 ###################################################################################
 usage-sapces(){
-  echo "Usage : inject-spaces -c <nb_of_spaces>"
+  echo "Usage : exoinjectspaces -c <nb_of_spaces>"
   echo ""
   echo "    -h| --help           help"
-  echo "    -H| --host           server hostname"
-  echo "    -p| --port           server port"
-  echo "    -s| --space          prefix name of the injected spaces"
+  echo "    -H| --host           server hostname Default: localhost"
+  echo "    -p| --port           server port Default: 8080"
+  echo "    -s| --spaceprefix    prefix of the injected spaces Default: space"
+  echo "    -a| --auth           Root credentials Default: root:gtn"
   echo "    -c| --count          number of spaces to create"
   echo ""
-	exit 1
 }
 ###################################################################################
 function exoinjectusers(){
-SHORT=Hpscv
-LONG=host,port,users,count,verbose
+SHORT=HPpscvua
+LONG=host,port,userprefix,count,verbose,userpassword,auth
+if [[ $1 == "-h" ]] || [[ "$1" == "--help" ]]; then usage-users && return; fi
 PARSED=`getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@"`
 if [[ $? -ne 0 ]]; then
     exoprint_err "Could not parse arguments"
+    return
 fi
 while true; do
     case "$1" in
-        -h|--help)
-            usage-users
-            ;;
         -H|--host)
             host="$2"
             shift 2
@@ -746,12 +765,20 @@ while true; do
             port="$2"
             shift 2
             ;;
-        -u|--users)
-            user="$2"
+        -u|--userprefix)
+            userprf="$2"
             shift 2
             ;;
         -c|--count)
             nbOfUsers="$2"
+            shift 2
+            ;;
+        -P|--userpassword)
+            passwd="$2"
+            shift 2
+            ;;
+        -a|--auth)
+            auth="$2"
             shift 2
             ;;
         -v|--verbose)
@@ -762,42 +789,46 @@ while true; do
             break
             ;;
         *)
-            echo "Programming error"
-            exit 3
+            exoprint_err "Programming error"
+            return
             ;;
     esac
 done
 if [ -z "$nbOfUsers" ]; then
-    exoprint_err "missing number of profiles to create (-c)"
+    exoprint_err "Missing number of profiles to create (-c)"
     return
 fi
 if [ -z "$host" ]; then host="localhost"; fi
 if [ -z "$port" ]; then port="8080"; fi
-if [ -z "$user" ]; then user="user"; fi
+if [ -z "$userprf" ]; then userprf="user"; fi
+if [ -z "$passwd" ]; then passwd="123456"; fi
+if [ -z "$auth" ]; then auth="root:gtn"; fi
+
 re='^[0-9]+$'
 if ! [[ $port =~ $re ]] ; then
-   exoprint_err "port must be a number" >&2
+   exoprint_err "Port must be a number" >&2
    return
 fi
 if ! [[ $nbOfUsers =~ $re ]] ; then
-   exoprint_err "number of profiles must be a number" >&2
+   exoprint_err "Number of profiles must be a number" >&2
    return
 fi
 userIndex=1
 until [ $userIndex -gt $nbOfUsers ]
 do
-  echo $userIndex
   url="http://$host:$port/rest/private/v1/social/users"
  data="{\"id\": \"$userIndex\","
-  data+="\"username\": \"$user$userIndex\","
-  data+="\"firstname\": \"$user$userIndex\","
-  data+="\"lastname\": \"$user$userIndex\","
-  data+="\"firstname\": \"$user$userIndex\","
-  data+="\"fullname\": \"$user$userIndex\","
-  data+="\"email\": \"$user$userIndex@patricelove.org\"}"
-  curlCmd="curl -s -X POST -u root:gtn -H \"Content-Type: application/json\" --data '$data' $url > /dev/null"
-  echo "Create user $user$userIndex"
-  eval $curlCmd
+  data+="\"username\": \"$userprf$userIndex\","
+  data+="\"firstname\": \"$userprf$userIndex\","
+  data+="\"lastname\": \"$userprf$userIndex\","
+  data+="\"firstname\": \"$userprf$userIndex\","
+  data+="\"fullname\": \"$userprf$userIndex\","
+  data+="\"password\": \"$passwd\","
+  data+="\"email\": \"$userprf$userIndex@exomail.org\"}"
+  curlCmd="curl -s -w '%{response_code}' -X POST -u "$auth" -H \"Content-Type: application/json\" --data '$data' $url | grep -o  '[1-4][0-9][0-9]'"
+  printf "Creating user $userprf$userIndex..."
+  httprs=$(eval $curlCmd)
+  if [[ "$httprs" =~ "200" ]]; then  exoprint_suc "OK"; else exoprint_err "Fail"; fi
   userIndex=$(($userIndex + 1))
 done
 }
@@ -805,45 +836,50 @@ done
 ###################################################################################
 
 function exohelp(){
-   echo "***************************************"
-   echo "eXo Shell Commands by Houssem v1.2     "
-   echo "***************************************"
+   echo -e "$(tput setaf 2)****************************************$(tput init)"
+   echo -e "$(tput setaf 3) eXo Shell Commands by Houssem B. A. v2 $(tput init)"
+   echo -e "$(tput setaf 2)****************************************$(tput init)"
    echo "-- exoget:"
-   echo "       Usage:   exoget <tomcat|jboss> <version|latest> [--noclean] : Download eXo platform."
-   echo "                exoget <reset> : Reset the repository authentification credinals."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exoget <tomcat|jboss> <version|latest> [--noclean] : Download eXo platform Instance."
+   echo "                exoget <reset> : Reset eXo Nexus repository stored credinals."
+   echo "       Note :   \"latest\" is only available for eXo Tomcat Server Instance"
    echo "-- exostart:"
-   echo "       Usage:   exostart : Run eXo platform."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exostart : Run eXo platform."
    echo "-- exochangedb:"
-   echo "       Usage:   exochangedb <mysql|oracle|hsqldb|...> : Change eXo platform DBMS."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exochangedb <mysql|oracle|hsqldb|...> : Change eXo platform DBMS."
    echo "-- exodataclear:"
-   echo "       Usage:   exodataclear : Clear eXo platform JCR Data and log file."
-   echo "-- exodatadump:"
-   echo "       Usage:   exodatadump : Backup and Clear eXo platform JCR Data and log file."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exodataclear : Clear eXo platform Data and log file."
+   echo "-- exodump:"
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exodump : Backup and Clear eXo platform Data and log file."
+   echo "-- exodumprestore:"
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exodatarestore : Restore Dumpped eXo platform Data and log file."
    echo "-- exodevinject:"
-   echo "       Usage:   exodevinject : Inject war & jar file into eXo platform."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exodevinject : Inject war & jar file into eXo platform."
    echo "-- exokill:"
-   echo "       Usage:   exokill : Kill eXo platform process."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exokill : Kill eXo platform Server Running Instance."
    echo "-- exoidldap:"
-   echo "       Usage:   exoidldap : Apply ldap integration on eXo platform."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exoidldap : Apply ldap integration on eXo platform."
    echo "                exoidldap <undo> : Remove ldap integration from eXo platform."
    echo "-- exoidad:"
-   echo "       Usage:   exoidad : Apply  Active Directory integration on eXo platform."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exoidad : Apply  Active Directory integration on eXo platform."
    echo "                exoidad <undo> : Remove Active Directory integration from eXo platform."
    echo "-- exossocas:"
-   echo "       Usage:   exossocas : Apply cas integration on eXo platform."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exossocas : Apply cas integration on eXo platform."
    echo "                exossocas <undo> : Remove cas integration from eXo platform."
-   echo "-- ldapinject:"
-   echo "       Usage:   ldapinject [<name_length:4>]: Inject Random users to OpenLDAP Server [ou=users,dc=exosupport,dc=com]."
+   echo "-- exoldapinject:"
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exoldapinject [<name_length:4>]: Inject Random users to OpenLDAP Server [ou=users,dc=exosupport,dc=com]."
    echo "-- exoinjectusers:"
-   echo "       Usage:   inject-users -c <nb_of_users>."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exoinjectusers -c <nb_of_users>."
+   echo "                exoinjectusers -h for more details"
    echo "-- exoinjectspaces:"
-   echo "       Usage:   inject-spaces -c <nb_of_spaces>."
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exoinjectspaces -c <nb_of_spaces>."
+   echo "                exoinjectspaces -h for more details"
    echo "-- exocldev:"
-   echo "       Usage:   exocldev repo_name" Clone exodev Github Repo
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exocldev repo_name Clone eXodev Github Repo."
    echo "-- exoclplf:"
-   echo "       Usage:   exoclplf repo_name" Clone exoplatform Github Repo
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exoclplf repo_name Clone eXoplatform Github Repo."
    echo "-- exocladd:"
-   echo "       Usage:   exocladd repo_name" Clone exo-addons Github Repo
+   echo -e "$(tput setaf 2)       Usage:$(tput init)   exocladd repo_name Clone eXo-addons Github Repo."
 }
 
 # @Private: Print Error Message
