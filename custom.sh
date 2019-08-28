@@ -588,11 +588,11 @@ function exoupdate() {
     exoprint_err "Could not update ! " && return
   fi
   if [ -d "$WORKINGDIR/$FOLDERNAME/.git" ]; then
-    git -C "$WORKINGDIR/$FOLDERNAME" pull --force
+    git -C "$WORKINGDIR/$FOLDERNAME" pull --force  &> /dev/null
   else
-    git clone "$UPGITURL" "$WORKINGDIR/$FOLDERNAME" #&> /dev/null
+    git clone "$UPGITURL" "$WORKINGDIR/$FOLDERNAME" &> /dev/null
   fi
-  chmod +x "$WORKINGDIR/$FOLDERNAME/install.sh"  #&> /dev/null
+  chmod +x "$WORKINGDIR/$FOLDERNAME/install.sh"  &> /dev/null
   source "$WORKINGDIR/custom.sh"
   "$WORKINGDIR/$FOLDERNAME/install.sh" && exoprint_suc "Update Success! " || exoprint_err "Error while updating! "
 }
