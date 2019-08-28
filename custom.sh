@@ -588,7 +588,7 @@ function exoupdate() {
     exoprint_err "Could not update ! " && return
   fi
   if [ -d "$WORKINGDIR/$FOLDERNAME/.git" ]; then
-    git pull -C "$WORKINGDIR/$FOLDERNAME" --force
+    git -C "$WORKINGDIR/$FOLDERNAME" pull --force
   else
     git clone "$UPGITURL" "$WORKINGDIR/$FOLDERNAME" #&> /dev/null
   fi
