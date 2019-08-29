@@ -4,17 +4,17 @@
 
 # @Public: Clear DATA FOR TOMCAT & JBOSS
 function exodataclear() {
-  if [ $(isTomcat) = 0 -a $(isJBoss) = 0 ]; then
+  if [ $(isTomcat) == 0 -a $(isJBoss) == 0 ]; then
     exoprint_err "Please check you are working on eXo Platform server instance!"
     return
   fi
 
-  if [ $(isTomcat) = 1 ]; then
+  if [ $(isTomcat) == 1 ]; then
     tomcatdataclear
     return
   fi
 
-  if [ $(isJBoss) = 1 ]; then
+  if [ $(isJBoss) == 1 ]; then
     jbossdataclear
     return
   fi
@@ -27,12 +27,12 @@ function exodump() {
     return
   fi
 
-  if [ $(isTomcat) = 1 ]; then
+  if [ $(isTomcat) == 1 ]; then
     tomcatdatadump
     return
   fi
 
-  if [ $(isJBoss) = 1 ]; then
+  if [ $(isJBoss) == 1 ]; then
     jbossdatadump
     return
   fi
@@ -40,17 +40,17 @@ function exodump() {
 
 # @Public: Dump DATA FOR TOMCAT & JBOSS
 function exodumprestore() {
-  if [ $(isTomcat) = 0 -a $(isJBoss) = 0 ]; then
+  if [ $(isTomcat) == 0 -a $(isJBoss) == 0 ]; then
     exoprint_err "Please check you are working on eXo Platform server instance!"
     return
   fi
 
-  if [ $(isTomcat) = 1 ]; then
+  if [ $(isTomcat) == 1 ]; then
     tomcatdatadumprestore
     return
   fi
 
-  if [ $(isJBoss) = 1 ]; then
+  if [ $(isJBoss) == 1 ]; then
     jbossdatadumprestore
     return
   fi
@@ -58,17 +58,17 @@ function exodumprestore() {
 
 # @Public: Change Database FOR TOMCAT & JBOSS
 function exochangedb() {
-  if [ $(isTomcat) = 0 -a $(isJBoss) = 0 ]; then
+  if [ $(isTomcat) == 0 -a $(isJBoss) == 0 ]; then
     exoprint_err "Please check you are working on eXo Platform server instance!"
     return
   fi
 
-  if [ $(isTomcat) = 1 ]; then
+  if [ $(isTomcat) == 1 ]; then
     tomcatchangedb $*
     return
   fi
 
-  if [ $(isJBoss) = 1 ]; then
+  if [ $(isJBoss) == 1 ]; then
     jbosschangedb $*
     return
   fi
@@ -81,7 +81,7 @@ function isTomcat() {
 
 # @Private: JBoss Server Check
 function isJBoss() {
-  [ -f "../bin/launcher.jar" ] && echo 1 || echo 0
+  [ -f "./bin/launcher.jar" ] && echo 1 || echo 0
 }
 
 # @Private: Tomcat Data Clear
@@ -322,7 +322,7 @@ progressfilt() {
 
 # @Public: Run eXo Platform Server Instance
 function exostart() {
-  if [ $(isTomcat) = 0 -a $(isJBoss) = 0 ]; then
+  if [ $(isTomcat) == 0 ] && [ $(isJBoss) == 0 ]; then
     exoprint_err "Please check you are working on eXo Platform server instance!"
     return
   fi
