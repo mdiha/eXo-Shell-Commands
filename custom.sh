@@ -250,7 +250,7 @@ function exoget() {
     return
   fi
   if [[ ! -f "$HOME/.plfcred.exo" ]]; then
-    echo "Please input your eXo repository credinals"
+    echo "Please input your eXo repository credentials"
     echo -n "Username: "
     read username
     echo -n "Password: "
@@ -327,13 +327,30 @@ function exostart() {
     return
   fi
 
+  if [ ! -z "$LOGFILTER" ]; then
+    if [[ "$LOGFILTER" == "INFO" ]] || [[ "$LOGFILTER" == "WARN" ]] || [[ "$LOGFILTER" == "ERROR" ]]; then
+      exoprint_op "Running eXo Platform with \"$LOGFILTER\" logging filter..."
+    else
+      exoprint_warn "Invalid LOGFILTER value. Please choose one of these values INFO, WARN, or ERROR. Otherwise leave it empty"
+      unset LOGFILTER
+    fi
+  fi
+
   if [ $(isTomcat) = 1 ]; then
-    ./start_eXo.sh $*
+    if [ ! -z "$(command -v fgrep)" ] && [ ! -z "$LOGFILTER" ]; then
+      ./start_eXo.sh $* | fgrep "$LOGFILTER" --color=never
+    else
+      ./start_eXo.sh $*
+    fi
     return
   fi
 
   if [ $(isJBoss) = 1 ]; then
-    ./bin/standalone.sh $*
+    if [ ! -z "$(command -v fgrep)" ] && [ ! -z "$LOGFILTER" ]; then
+      ./bin/standalone.sh $* | fgrep "$LOGFILTER" --color=never
+    else
+      ./bin/standalone.sh $*
+    fi
     return
   fi
 }
@@ -724,7 +741,6 @@ function exoinjectspaces() {
   if [ -z "$auth" ]; then auth="root:gtn"; fi
   if [ -z "$offset" ]; then offset=1; fi
 
-
   re='^[0-9]+$'
   if ! [[ $port =~ $re ]]; then
     exoprint_err "Port must be a number" >&2
@@ -816,9 +832,9 @@ function exoinjectusers() {
       shift 2
       ;;
     -o | --offset)
-        offset="$2"
-        shift 2
-        ;;
+      offset="$2"
+      shift 2
+      ;;
     -v | --verbose)
       verbose=y
       shift
@@ -879,10 +895,11 @@ function exohelp() {
   echo -e "$(tput setaf 2)****************************************$(tput init)"
   echo "-- exoget:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)   exoget <tomcat|jboss> <version|latest> [--noclean] : Download eXo platform Instance."
-  echo "                exoget <reset> : Reset eXo Nexus repository stored credinals."
-  echo "       Note :   \"latest\" is only available for eXo Tomcat Server Instance"
+  echo "                exoget <reset> : Reset eXo Nexus repository stored credentials."
+  echo -e "       $(tput setaf 6)Note :$(tput init)   \"latest\" is only available for eXo Tomcat Server Instance"
   echo "-- exostart:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)   exostart: Run eXo platform instance."
+  echo -e "       $(tput setaf 6)Note :$(tput init)   You can set \"LOGFILTER\" value to filter server log : INFO, WARN, or ERROR before running exostart (Ex LOGFILTER=WARN)"
   echo "-- exostop:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)   exostop [--force]: Stop eXo platform instance."
   echo "-- exochangedb:"
@@ -935,4 +952,9 @@ function exoprint_suc() {
 # @Private: Print Warning Message
 function exoprint_warn() {
   echo -e "$(tput setaf 3)Warning:$(tput init) $1"
+}
+
+# @Private: Print Operation Message
+function exoprint_op() {
+  echo -e "$(tput setaf 6)Operation:$(tput init) $1"
 }
