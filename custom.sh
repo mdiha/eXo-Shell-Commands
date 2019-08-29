@@ -661,8 +661,8 @@ function exoldapinject() {
 }
 ###################################################################################
 function exoinjectspaces() {
-  SHORT=Hpscva
-  LONG=host,port,spaceprefix,count,verbose,auth
+  SHORT=Hpscvao
+  LONG=host,port,spaceprefix,count,verbose,auth,offset
   if [[ $1 == "-h" ]] || [[ "$1" == "--help" ]]; then
     usage-spaces
     return
@@ -699,6 +699,10 @@ function exoinjectspaces() {
       auth="$2"
       shift 2
       ;;
+    -o | --offset)
+      offset="$2"
+      shift 2
+      ;;
     "")
       break
       ;;
@@ -718,6 +722,8 @@ function exoinjectspaces() {
   if [ -z "$port" ]; then port="8080"; fi
   if [ -z "$spaceprefix" ]; then spaceprefix="space"; fi
   if [ -z "$auth" ]; then auth="root:gtn"; fi
+  if [ -z "$offset" ]; then offset=1; fi
+
 
   re='^[0-9]+$'
   if ! [[ $port =~ $re ]]; then
@@ -729,7 +735,7 @@ function exoinjectspaces() {
     exit 1
   fi
 
-  spaceIndex=1
+  spaceIndex=$offset
 
   until [ $spaceIndex -gt $nbOfSpaces ]; do
     url="http://$host:$port/rest/private/v1/social/spaces"
@@ -748,7 +754,7 @@ function exoinjectspaces() {
 
 ###################################################################################
 usage-users() {
-  echo " Usage : exoinjectusers -c <nb_of_users>"
+  echo " Usage : exoinjectusers -c <nb_of_users> [options]"
   echo ""
   echo "    -h| --help           help"
   echo "    -H| --host           server hostname Default: localhost"
@@ -757,11 +763,12 @@ usage-users() {
   echo "    -P| --userpassword   password of the injected users Default: 123456"
   echo "    -a| --auth           Root credentials Default: root:gtn"
   echo "    -c| --count          number of users to create"
+  echo "    -o| --offset         start number of users index to create Default: 1"
   echo ""
 }
 ###################################################################################
 usage-sapces() {
-  echo "Usage : exoinjectspaces -c <nb_of_spaces>"
+  echo "Usage : exoinjectspaces -c <nb_of_spaces> [options]"
   echo ""
   echo "    -h| --help           help"
   echo "    -H| --host           server hostname Default: localhost"
@@ -769,12 +776,13 @@ usage-sapces() {
   echo "    -s| --spaceprefix    prefix of the injected spaces Default: space"
   echo "    -a| --auth           Root credentials Default: root:gtn"
   echo "    -c| --count          number of spaces to create"
+  echo "    -o| --offset         start number of spaces index to create Default: 1"
   echo ""
 }
 ###################################################################################
 function exoinjectusers() {
-  SHORT=HPpscvua
-  LONG=host,port,userprefix,count,verbose,userpassword,auth
+  SHORT=HPpscvuao
+  LONG=host,port,userprefix,count,verbose,userpassword,auth,offset
   if [[ $1 == "-h" ]] || [[ "$1" == "--help" ]]; then usage-users && return; fi
   PARSED=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
   if [[ $? -ne 0 ]]; then
@@ -807,6 +815,10 @@ function exoinjectusers() {
       auth="$2"
       shift 2
       ;;
+    -o | --offset)
+        offset="$2"
+        shift 2
+        ;;
     -v | --verbose)
       verbose=y
       shift
@@ -829,6 +841,7 @@ function exoinjectusers() {
   if [ -z "$userprf" ]; then userprf="user"; fi
   if [ -z "$passwd" ]; then passwd="123456"; fi
   if [ -z "$auth" ]; then auth="root:gtn"; fi
+  if [ -z "$offset" ]; then offset=1; fi
 
   re='^[0-9]+$'
   if ! [[ $port =~ $re ]]; then
@@ -839,7 +852,7 @@ function exoinjectusers() {
     exoprint_err "Number of profiles must be a number" >&2
     return
   fi
-  userIndex=1
+  userIndex=$offset
   until [ $userIndex -gt $nbOfUsers ]; do
     url="http://$host:$port/rest/private/v1/social/users"
     data="{\"id\": \"$userIndex\","
