@@ -340,6 +340,16 @@ function exostart() {
 
 # @Public: Stop eXo Platform Server Instance
 function exostop() {
+  if [[ $1 == "--force" ]]; then
+    prcid=$(lsof -t -i:8080)
+    if [ -z "$prcid" ]; then
+      exoprint_err "Could not find any eXo Server Instance !"
+    else
+      kill -9 $prcid &>/dev/null
+      exoprint_suc "Server process has been killed!"
+    fi
+    return
+  fi
   if [ $(isTomcat) = 0 -a $(isJBoss) = 0 ]; then
     exoprint_err "Please check you are working on eXo Platform server instance!"
     return
@@ -348,12 +358,6 @@ function exostop() {
   if [ $(isTomcat) = 1 ]; then
     ./stop_eXo.sh $*
     return
-  fi
-  if [[ $1 == "--force" ]]; then
-    kill -9 $(lsof -t -i:8080) &>/dev/null
-    exoprint_suc "Server process has been killed!"
-  else
-    exoprint_suc "Server has been stopped!"
   fi
 }
 
@@ -588,11 +592,11 @@ function exoupdate() {
     exoprint_err "Could not update ! " && return
   fi
   if [ -d "$WORKINGDIR/$FOLDERNAME/.git" ]; then
-    git -C "$WORKINGDIR/$FOLDERNAME" pull --force  &> /dev/null
+    git -C "$WORKINGDIR/$FOLDERNAME" pull --force &>/dev/null
   else
-    git clone "$UPGITURL" "$WORKINGDIR/$FOLDERNAME" &> /dev/null
+    git clone "$UPGITURL" "$WORKINGDIR/$FOLDERNAME" &>/dev/null
   fi
-  chmod +x "$WORKINGDIR/$FOLDERNAME/install.sh"  &> /dev/null
+  chmod +x "$WORKINGDIR/$FOLDERNAME/install.sh" &>/dev/null
   source "$WORKINGDIR/custom.sh"
   "$WORKINGDIR/$FOLDERNAME/install.sh" && exoprint_suc "Update Success! " || exoprint_err "Error while updating! "
 }
@@ -865,7 +869,9 @@ function exohelp() {
   echo "                exoget <reset> : Reset eXo Nexus repository stored credinals."
   echo "       Note :   \"latest\" is only available for eXo Tomcat Server Instance"
   echo "-- exostart:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exostart: Run eXo platform."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)   exostart: Run eXo platform instance."
+  echo "-- exostop:"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)   exostop [--force]: Stop eXo platform instance."
   echo "-- exochangedb:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)   exochangedb <mysql|oracle|hsqldb|...> [-v|--version ADDON_VERSION]: Change eXo platform DBMS."
   echo "-- exodataclear:"
@@ -876,8 +882,6 @@ function exohelp() {
   echo -e "$(tput setaf 2)       Usage:$(tput init)   exodatarestore: Restore Dumpped eXo platform Data and log file."
   echo "-- exodevinject:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)   exodevinject: Inject war & jar file into eXo platform."
-  echo "-- exokill:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exokill: Kill eXo platform Server Running Instance."
   echo "-- exoidldap:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)   exoidldap: Apply ldap integration on eXo platform."
   echo "                exoidldap <undo> : Remove ldap integration from eXo platform."
