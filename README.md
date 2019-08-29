@@ -11,4 +11,4 @@ HOW TO INSTALL:
 
 4- You can run exohelp to show available commands
 
-
+5- You can exoupdate to install updates
