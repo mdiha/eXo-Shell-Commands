@@ -522,7 +522,19 @@ function exodevsync() {
     exoprint_err "Please start the server!"
     return
   fi
-  tail -f $SRVDIR/logs/platform.log
+  if [ ! -z "$LOGFILTER" ]; then
+    if [[ "$LOGFILTER" == "INFO" ]] || [[ "$LOGFILTER" == "WARN" ]] || [[ "$LOGFILTER" == "ERROR" ]]; then
+      exoprint_op "Synchronizing eXo Platform Log with \"$LOGFILTER\" logging filter..."
+    else
+      exoprint_warn "Invalid LOGFILTER value. Please choose one of these values INFO, WARN, or ERROR. Otherwise leave it empty"
+      unset LOGFILTER
+    fi
+  fi
+  if [ ! -z "$(command -v fgrep)" ] && [ ! -z "$LOGFILTER" ]; then
+    tail -f $SRVDIR/logs/platform.log | fgrep "$LOGFILTER" --color=never
+  else
+    tail -f $SRVDIR/logs/platform.log
+  fi
 }
 
 # @Public: Enable LDAP Integration For eXo Platform
@@ -894,49 +906,60 @@ function exohelp() {
   echo -e "$(tput setaf 3) eXo Shell Commands by Houssem B. A. v2 $(tput init)"
   echo -e "$(tput setaf 2)****************************************$(tput init)"
   echo "-- exoget:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exoget <tomcat|jboss> <version|latest> [--noclean] : Download eXo platform Instance."
-  echo "                exoget <reset> : Reset eXo Nexus repository stored credentials."
-  echo -e "       $(tput setaf 6)Note :$(tput init)   \"latest\" is only available for eXo Tomcat Server Instance"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exoget <tomcat|jboss> <version|latest> [--noclean] : Download eXo platform Instance."
+  echo "                   exoget <reset> : Reset eXo Nexus repository stored credentials."
+  echo -e "       $(tput setaf 6)Note :$(tput init)      \"latest\" is only available for eXo Tomcat Server Instance"
   echo "-- exostart:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exostart: Run eXo platform instance."
-  echo -e "       $(tput setaf 6)Note :$(tput init)   You can set \"LOGFILTER\" value to filter server log : INFO, WARN, or ERROR before running exostart (Ex LOGFILTER=WARN)"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exostart: Run eXo platform instance."
+  echo -e "       $(tput setaf 6)Note :$(tput init)      [Optional] Set $(tput setaf 3)LOGFILTER$(tput init) value to filter server log : INFO, WARN, or ERROR before running exostart (Ex LOGFILTER=WARN)"
   echo "-- exostop:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exostop [--force]: Stop eXo platform instance."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exostop [--force]: Stop eXo platform instance."
   echo "-- exochangedb:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exochangedb <mysql|oracle|hsqldb|...> [-v|--version ADDON_VERSION]: Change eXo platform DBMS."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exochangedb <mysql|oracle|hsqldb|...> [-v|--version ADDON_VERSION]: Change eXo platform DBMS."
   echo "-- exodataclear:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exodataclear: Clear eXo platform Data and log file."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exodataclear: Clear eXo platform Data and log file."
   echo "-- exodump:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exodump: Backup and Clear eXo platform Data and log file."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exodump: Backup and Clear eXo platform Data and log file."
   echo "-- exodumprestore:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exodatarestore: Restore Dumpped eXo platform Data and log file."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exodatarestore: Restore Dumpped eXo platform Data and log file."
+  echo "-- exodevstart:"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exodevstart: Run eXo Platform Developement Instance."
+  echo -e "       $(tput setaf 6)Note :$(tput init)      [Mandatory] Set $(tput setaf 3)SRVDIR$(tput init) value containing the server Path"
+  echo "-- exodevstop:"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exodevstop Stop eXo Platform Developement Instance."
+  echo -e "       $(tput setaf 6)Note :$(tput init)      [Mandatory] Set $(tput setaf 3)SRVDIR$(tput init) value containing the server Path"
   echo "-- exodevinject:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exodevinject: Inject war & jar file into eXo platform."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exodevinject: Inject war & jar file into eXo platform."
+  echo -e "       $(tput setaf 6)Note :$(tput init)      [Mandatory] Set $(tput setaf 3)SRVDIR$(tput init) value containing the server Path"
+  echo "-- exodevsync:"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exodevsync: Print eXo Platform Log"
+  echo -e "       $(tput setaf 6)Note :$(tput init)      [Mandatory] Set $(tput setaf 3)SRVDIR$(tput init) value containing the server Path"
+  echo -e "                   [Optional] Set $(tput setaf 3)LOGFILTER$(tput init) value to filter server log : INFO, WARN, or ERROR before running exodevsync (Ex LOGFILTER=WARN)"
   echo "-- exoidldap:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exoidldap: Apply ldap integration on eXo platform."
-  echo "                exoidldap <undo> : Remove ldap integration from eXo platform."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exoidldap: Apply ldap integration on eXo platform."
+  echo "                   exoidldap <undo> : Remove ldap integration from eXo platform."
   echo "-- exoidad:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exoidad: Apply  Active Directory integration on eXo platform."
-  echo "                exoidad <undo> : Remove Active Directory integration from eXo platform."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exoidad: Apply  Active Directory integration on eXo platform."
+  echo "                   exoidad <undo> : Remove Active Directory integration from eXo platform."
   echo "-- exossocas:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exossocas: Apply cas integration on eXo platform."
-  echo "                exossocas <undo>: Remove cas integration from eXo platform."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exossocas: Apply cas integration on eXo platform."
+  echo "                   exossocas <undo>: Remove cas integration from eXo platform."
   echo "-- exoldapinject:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exoldapinject [<name_length:4>]: Inject Random users to OpenLDAP Server [ou=users,dc=exosupport,dc=com]."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exoldapinject [<name_length:4>]: Inject Random users to OpenLDAP Server [ou=users,dc=exosupport,dc=com]."
   echo "-- exoinjectusers:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exoinjectusers -c <nb_of_users>."
-  echo "                exoinjectusers -h for more details"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exoinjectusers -c <nb_of_users>."
+  echo "                   exoinjectusers -h for more details"
   echo "-- exoinjectspaces:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exoinjectspaces -c <nb_of_spaces>."
-  echo "                exoinjectspaces -h for more details"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exoinjectspaces -c <nb_of_spaces>."
+  echo "                   exoinjectspaces -h for more details"
   echo "-- exocldev:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exocldev <repo_name>: Clone eXodev Github Repository."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exocldev <repo_name>: Clone eXodev Github Repository."
   echo "-- exoclplf:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exoclplf <repo_name>: Clone eXoplatform Github Repository."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exoclplf <repo_name>: Clone eXoplatform Github Repository."
   echo "-- exocladd:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exocladd <repo_name>: Clone eXo-addons Github Repository."
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exocladd <repo_name>: Clone eXo-addons Github Repository."
   echo "-- exoupdate:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)   exoupdate: Update eXo Shell Commands"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exoupdate: Update eXo Shell Commands"
 }
 
 # @Private: Print Error Message
