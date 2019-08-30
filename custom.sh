@@ -268,9 +268,9 @@ function exoget() {
     exoprint_err "There is not server type called $1 !"
     return
   fi
-  if [[ $2 == "latest" ]]; then
+  if [[ $2 == "latest" ]] || [[ $2 =~ "-M" ]]; then
     if [[ $dntype == "jbosseap" ]]; then
-      exoprint_err "There is no SNAPSHOT version For JBoss Server !"
+      exoprint_err "There is no SNAPSHOT versions for JBoss Server !"
       return
     fi
     dnversion="5.3.x-SNAPSHOT"
@@ -908,7 +908,7 @@ function exohelp() {
   echo "-- exoget:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exoget <tomcat|jboss> <version|latest> [--noclean] : Download eXo platform Instance."
   echo "                   exoget <reset> : Reset eXo Nexus repository stored credentials."
-  echo -e "       $(tput setaf 6)Note :$(tput init)      \"latest\" is only available for eXo Tomcat Server Instance"
+  echo -e "       $(tput setaf 6)Note :$(tput init)      <latest> argument  is only available for eXo Tomcat Server Instance"
   echo "-- exostart:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exostart: Run eXo platform instance."
   echo -e "       $(tput setaf 6)Note :$(tput init)      [Optional] Set $(tput setaf 3)LOGFILTER$(tput init) value to filter server log : INFO, WARN, or ERROR before running exostart (Ex LOGFILTER=WARN)"
