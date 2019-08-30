@@ -627,7 +627,7 @@ function exoupdate() {
   fi
   chmod +x "$WORKINGDIR/$FOLDERNAME/install.sh" &>/dev/null
   source "$WORKINGDIR/custom.sh"
-  "$WORKINGDIR/$FOLDERNAME/install.sh" && exoprint_suc "Update Success! " || exoprint_err "Error while updating! "
+  "$WORKINGDIR/$FOLDERNAME/install.sh" "$WORKINGDIR/$FOLDERNAME" && exoprint_suc "Update Success! " || exoprint_err "Error while updating! "
 }
 
 # @Public: Inject Users to LDAP Server

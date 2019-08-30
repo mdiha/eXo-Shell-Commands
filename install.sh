@@ -1,6 +1,8 @@
 #!/bin/bash
 mkdir -p ~/.exocmd/ &> /dev/null
-cp -rf * ~/.exocmd/ &> /dev/null
+wkdir="$1"
+if [ -z "$wkdir" ]; then wkdir="$(pwd)" ; fi
+cp -rf "$wkdir"/* ~/.exocmd/ &> /dev/null
 rm -rf ~/.exocmd/install.sh &> /dev/null
 export isAlr="$( cat ~/.bashrc | grep exocmd/custom.sh)"
 if [[ $isAlr == "" ]]; then
