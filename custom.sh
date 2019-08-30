@@ -360,12 +360,12 @@ function exostop() {
   if [[ $1 == "--force" ]]; then
     prcid=$(lsof -t -i:8080)
     if [ -z "$prcid" ]; then
-      srvpids=$(jps | grep  "Bootstrap\|jboss-modules.jar" |  cut -d " " -f1)
+      srvpids=$(jps | grep "Bootstrap\|jboss-modules.jar" | cut -d " " -f1)
       if [ -z "$srvpids" ]; then
-      exoprint_err "Could not find any eXo Server Instance !"
-    else
-      kill -9 "$srvpids" &> /dev/null && exoprint_suc "Server process has been killed!"
-    fi
+        exoprint_err "Could not find any eXo Server Instance !"
+      else
+        kill -9 "$srvpids" &>/dev/null && exoprint_suc "Server process has been killed!"
+      fi
     else
       kill -9 $prcid &>/dev/null
       exoprint_suc "Server process has been killed!"
