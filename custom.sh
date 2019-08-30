@@ -621,13 +621,21 @@ function exoupdate() {
     exoprint_err "Could not update ! " && return
   fi
   if [ -d "$WORKINGDIR/$FOLDERNAME/.git" ]; then
-    git -C "$WORKINGDIR/$FOLDERNAME" pull --force &>/dev/null
+    git -C "$WORKINGDIR/$FOLDERNAME" fetch &>/dev/null
+    HEADHASH=$(git rev-parse HEAD)
+    UPSTREAMHASH=$(git rev-parse master@{upstream})
+    if [ "$HEADHASH" == "$UPSTREAMHASH" ]; then
+      echo "You have already working on the latest version!"
+      return
+    else
+      git -C "$WORKINGDIR/$FOLDERNAME" pull --force &>/dev/null
+    fi
   else
     git clone "$UPGITURL" "$WORKINGDIR/$FOLDERNAME" &>/dev/null
   fi
   chmod +x "$WORKINGDIR/$FOLDERNAME/install.sh" &>/dev/null
   source "$WORKINGDIR/custom.sh"
-  "$WORKINGDIR/$FOLDERNAME/install.sh" "$WORKINGDIR/$FOLDERNAME" && exoprint_suc "Update Success! " || exoprint_err "Error while updating! "
+  "$WORKINGDIR/$FOLDERNAME/install.sh" "$WORKINGDIR/$FOLDERNAME" && exoprint_suc "You have updated eXo Shell Commands! " || exoprint_err "Error while updating! "
 }
 
 # @Public: Inject Users to LDAP Server
