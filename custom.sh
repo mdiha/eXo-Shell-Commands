@@ -631,10 +631,8 @@ function exoupdate() {
     UPSTREAMHASH=$(git rev-parse master@{upstream})
     if [ "$HEADHASH" == "$UPSTREAMHASH" ]; then
       echo "You have already working on the latest version!"
-      return
-    else
-      git -C "$WORKINGDIR/$FOLDERNAME" pull --force &>/dev/null
     fi
+    git -C "$WORKINGDIR/$FOLDERNAME" pull --force &>/dev/null
   else
     git clone "$UPGITURL" "$WORKINGDIR/$FOLDERNAME" &>/dev/null
   fi
