@@ -545,37 +545,71 @@ function exodevsync() {
 # @Public: Enable LDAP Integration For eXo Platform
 function exoidldap() {
   export tcloader="./bin/tomcat-juli.jar"
-  if [ ! -f "$tcloader" ]; then
+  if [ $(isTomcat) != 1 ]; then
     exoprint_err "Please make sure you are working on Tomcat Server!"
     return
   fi
-  exostop &>/dev/null
-  echo "Default Config: cn=admin,dc=exosupport,dc=com || Password: root"
-  mkdir -p gatein/conf/portal/portal &>/dev/null
-  cp -rf ~/.exocmd/openldap/configuration.xml gatein/conf/portal/portal/configuration.xml &>/dev/null
-  cp -rf ~/.exocmd/openldap/picketLink-idm-configuration.xml gatein/conf/portal/portal/picketLink-idm-configuration.xml &>/dev/null
-  cp -rf ~/.exocmd/openldap/picketlink-idm-ldap-config.xml gatein/conf/portal/portal/picketlink-idm-ldap-config.xml &>/dev/null
-  cp -rf ~/.exocmd/openldap/sync.xml gatein/conf/portal/portal/sync.xml &>/dev/null
-  if [[ $1 == "--undo" ]]; then
-    rm -rf gatein/conf/portal/portal &>/dev/null
-    exoprint_suc "Your server is now set to Default!"
+  if [[ "$1" == "--undo" ]]; then
+    if [ -z "$(find webapps -name 'ldap-extension-*')" ]; then
+      exoprint_err "Could not find LDAP extension !"
+    else
+      rm -rf webapps/ldap-extension-* &>/dev/null && exoprint_suc "LDAP extension has been removed !"
+    fi
     return
   fi
-  isAlr=""
-  if [[ -f gatein/conf/exo.properties ]]; then
-    isAlr="$(cat gatein/conf/exo.properties | grep exo.idm.externalStore.update.onlogin=true)"
-  else
-    cp gatein/conf/exo-sample.properties gatein/conf/exo.properties &>/dev/null
+  if [ -z "$(command -v sed)" ]; then exoprint_err "sed command is not installed !" ; return ; fi
+  if [ -z "$(command -v grep)" ]; then exoprint_err "grep command is not installed !" ; return ; fi
+
+  EXOCMD="$HOME/.exocmd"
+  TMPDIR="/tmp/ldap-extension"
+  if [ ! -d "$EXOCMD" ] || [ ! -f "$EXOCMD/extension.zip" ]; then
+    exoprint_err "Could not get files, please reinstall eXo-Shell Commands !" ; return
   fi
-  if [[ $isAlr == "" ]]; then
-    cat ~/.exocmd/openldap/ldap_exo.properties >>gatein/conf/exo.properties
-  fi
-  if [[ $1 == "--undo" ]]; then
-    exoprint_suc "Your server is now set to default!"
-  else
-    echo "PLF Server Path: $(pwd)"
-    exoprint_suc "Your server is now set with OpenLDAP!"
-  fi
+  PLFVERSION=$(find lib -name 'commons-api-*' | sed -E 's/lib\/commons-api-//g' | sed -E 's/.jar//g')
+  if [ -z "$PLFVERSION" ]; then exoprint_err "Could not get platform version !" ; return; fi
+  PLFBRANCH=$(echo ${PLFVERSION%.*}".x")
+  if [ -z "$PLFBRANCH" ]; then exoprint_err "Could not get platform major version !" ; return; fi
+  printf "Input adminDN: (Default cn=admin,dc=exosupport,dc=com) "
+  read adminDN && echo
+  if [ -z "$adminDN" ]; then adminDN="cn=admin,dc=exosupport,dc=com"; fi
+  printf "Input adminPassword: (Default root) "
+  read -s adminPassword && echo
+  if [ -z "$adminPassword" ]; then adminPassword="root"; fi
+  printf "Input providerURL: (Default ldap://127.0.0.1:389) "
+  read -s providerURL && echo
+  if [ -z "$providerURL" ]; then providerURL="ldap://127.0.0.1:389"; fi
+  rm -rf $TMPDIR &>/dev/null
+  if [ ! -z $(command -v crc32) ] && [[ "$(crc32 $EXOCMD/extension.zip)" != "3480e93e" ]]; then exoprint_warn "Tampered extension.zip file!"; fi
+  if ! unzip -o $EXOCMD/extension.zip -d $TMPDIR &>/dev/null ; then exoprint_err "Could not create extension !" ; return ; fi
+  if ! eval "sed -i 's/PLFBRANCH/$PLFBRANCH/g' $TMPDIR/pom.xml" &>/dev/null ; then exoprint_err "Could not set major version in the maven project !" ; return ; fi
+  if ! eval "sed -i 's/PLFVERSION/$PLFVERSION/g' $TMPDIR/pom.xml" &>/dev/null  ; then exoprint_err "Could not set version in the maven project !" ; return ; fi
+  if ! sed -i 's/EXTID/ldap-extension/g' $TMPDIR/pom.xml &>/dev/null  ; then exoprint_err "Could not set artificatid in the maven project !" ; return ; fi
+  if ! sed -i 's/EXTDESC/ldap Extension/g' $TMPDIR/pom.xml &>/dev/null  ; then exoprint_err "Could not set description in the maven project !" ; return ; fi
+  CONFDIR="$TMPDIR/src/main/webapp/WEB-INF/conf"
+  if ! unzip -j webapps/portal.war WEB-INF/conf/organization/idm-configuration.xml -d "$CONFDIR/organization/" &>/dev/null  ; then exoprint_err "Could not get idm-configuration.xml file !"  ; return ; fi
+  if ! unzip -j webapps/portal.war WEB-INF/conf/organization/picketlink-idm/examples/picketlink-idm-openldap-config.xml -d "$CONFDIR/organization/picketlink-idm/" &>/dev/null  ; then exoprint_err "Could not get picketlink-idm-ldap-config.xml file !"  ; return ; fi
+  if ! mv "$CONFDIR/organization/picketlink-idm/picketlink-idm-openldap-config.xml" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not get picketlink-idm-ldap-config.xml file !"  ; return ; fi
+  if ! sed -i "s/<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-config.xml<\\/value>/<!--<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-config.xml<\\/value>-->/g" "$CONFDIR/organization/idm-configuration.xml" &>/dev/null  ; then exoprint_err "Could not deactivate the default configuration file !"  ; return ; fi
+  if ! sed -i "s/<!--<value>war:\\/conf\\/organization\\/picketlink-idm\\/examples\\/picketlink-idm-ldap-config.xml<\\/value>-->/<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-ldap-config.xml<\\/value>/g" "$CONFDIR/organization/idm-configuration.xml" &>/dev/null  ; then exoprint_err "Could not activate picketlink-idm-ldap-config.xml file !"  ; return ; fi
+  if ! sed -i "s/ldap:\\/\\/localhost:1389/$(echo $providerURL | sed 's#/#\\/#g')/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the providerURL!"  ; return ; fi
+  if ! sed -i "s/<value>secret<\\/value>/<value>$adminPassword<\\/value>/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the adminPassword!"  ; return ; fi
+  if ! sed -i "s/cn=Manager,dc=my-domain,dc=com/$adminDN/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the adminDN!"  ; return ; fi
+  DCNAME=$(echo "dc="${adminDN#*dc=})
+  if ! sed -i "s/dc=my-domain,dc=com/$DCNAME/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the DCNAME!"  ; return ; fi
+  if ! sed -i "s/ou=People,o=portal,o=gatein/ou=users/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the organization unit!" ; return ; fi
+  if ! mvn -f $TMPDIR/pom.xml clean install &>/dev/null  ; then exoprint_err "Could not build the extension!"  ; return ; fi
+  if ! rm -rf webapps/ldap-extension-* &>/dev/null  ; then exoprint_err "Could not remove the old extension!"  ; return ; fi
+  if ! cp -f "$TMPDIR/target/ldap-extension-$PLFBRANCH.war" webapps/ &>/dev/null  ; then exoprint_err "Could not place the extension!"  ; return ; fi
+  EXTFILENAME="$(realpath webapps/ldap-extension-$PLFBRANCH.war)"
+  rm -rf $TMPDIR &>/dev/null &>/dev/null || exoprint_warn "Could not remove unecessary files!"
+  if [ ! -f "gatein/conf/exo.properties" ]; then touch "gatein/conf/exo.properties" || (exoprint_err "Could not create exo.properties file!" ; return); fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^exo.idm.externalStore.import.cronExpression')" ]; then echo "exo.idm.externalStore.import.cronExpression=0 */1 * ? * *" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^exo.idm.externalStore.queue.processing.cronExpression')" ]; then echo "exo.idm.externalStore.queue.processing.cronExpression=0 */2 * ? * *" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^exo.idm.externalStore.queue.processing.error.retries.max')" ]; then echo "exo.idm.externalStore.queue.processing.error.retries.max=5" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^exo.idm.externalStore.delete.cronExpression')" ]; then echo "exo.idm.externalStore.delete.cronExpression=0 59 23 ? * *" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^exo.idm.externalStore.update.onlogin')" ]; then echo "exo.idm.externalStore.update.onlogin=true" >>"gatein/conf/exo.properties"; fi
+  exoprint_suc "\e]8;;file://$EXTFILENAME\aLDAP extension\e]8;;\a has been created !"
+  echo -e "You can also customize externalStore Job Task with \e]8;;file://"$(realpath gatein/conf/exo.properties)"\aexo.properties\e]8;;\a file."
 }
 
 # @Public: Enable Active Directory Integration For eXo Platform
