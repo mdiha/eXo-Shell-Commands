@@ -244,8 +244,7 @@ function exoget() {
     exoprint_suc "Repository credentials has been cleared!"
     return
   fi
-  count=$(dpkg -l | grep wget | wc -l)
-  if [[ "$count" == "0" ]]; then
+  if [ -z "$(command -v wget)" ]; then
     exoprint_err "wget is not installed !"
     return
   fi
@@ -677,8 +676,7 @@ function exoupdate() {
 
 # @Public: Inject Users to LDAP Server
 function exoldapinject() {
-  count=$(dpkg -l | grep gpw | wc -l)
-  if [[ "$count" == "0" ]]; then
+  if [ -z "$(command -v gpw)" ]; then
     exoprint_err "gpw is not installed !"
     return
   fi
