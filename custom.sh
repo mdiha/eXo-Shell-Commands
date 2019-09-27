@@ -388,52 +388,145 @@ function exossocas() {
     exoprint_err "Please check you are working on eXo Platform server instance!"
     return
   fi
-  if [ $(isJBoss) = 0 ]; then
+  if [ $(isJBoss) != 0 ]; then
     exoprint_warn "Not yet supported For JBoss Server!"
     return
   fi
-  exostop &>/dev/null
-  unzip -n "~/.exocmd/eXo_cas-server_3.5.zip" -d ../ &>/dev/null
-  if [[ $1 == "undo" ]]; then
+  TOMCAT7VER="7.0.96"
+  TOMCAT8VER="8.5.45"
+  CASVER1="3.5.0"
+  CASVER2="4.0.7"
+  echo "Please select Tomcat version for CAS:"
+  echo "   1/ $TOMCAT7VER [Default]"
+  echo "   2/ $TOMCAT8VER"
+  printf "** Option: "
+  read tomcatopt
+  if [ -z "$tomcatopt" ]; then tomcatopt="1"; fi
+  if [ $tomcatopt != "1" ] && [ $tomcatopt != "2" ]; then
+    exoprint_err "Invalid Option !"
+    return
+  elif [[ "$tomcatopt" == "1" ]]; then
+    tomcatv=$TOMCAT7VER
+  else
+    tomcatv=$TOMCAT8VER
+  fi
+  echo "Please select CAS version:"
+  echo "   1/ $CASVER1 [Default]"
+  echo "   2/ $CASVER2"
+  printf "** Option: "
+  read casopt
+  if [ -z "$casopt" ]; then casopt="1"; fi
+  if [ $casopt != "1" ] && [ $casopt != "2" ]; then
+    exoprint_err "Invalid Option !"
+    return
+  elif [[ "$casopt" == "1" ]]; then
+    casv=$CASVER1
+  else
+    casv=$CASVER2
+  fi
+  printf "Input CAS Tomcat Server Port[Default: 8888]: "
+  read srvport
+  if [ -z "$srvport" ]; then srvport="8888"; fi
+  clear
+  echo "You have selected:"
+  echo " -- Tomcat Server version : $tomcatv"
+  echo " -- Tomcat Server port    : $srvport"
+  echo " -- CAS version           : $casv"
+  read -p "Press enter to continue" && clear
+  TOMCATDNURL="https://www-us.apache.org/dist/tomcat/tomcat-$(echo ${tomcatv%%.*})/v$tomcatv/bin/apache-tomcat-$tomcatv.tar.gz"
+  TOMCATFILEPATH="/tmp/apache-tomcat-$tomcatv.tar.gz"
+  TOMCATDIRPATH="/tmp/apache-tomcat-$tomcatv"
+  if [[ $1 == "--undo" ]]; then
     ./addon uninstall exo-cas
   else
-    ./addon install exo-cas
-  fi
-  mkdir -p conf/portal &>/dev/null
-  if [[ $1 == "undo" ]]; then
-    cp -rf ~/.exocmd/sso/sso_agent_def.xml conf/portal/configuration.xml &>/dev/null
-  else
-    cp -rf ~/.exocmd/sso/sso_agent_configuration.xml conf/portal/configuration.xml &>/dev/null
-  fi
-  jar -uvf ./lib/sso-agent-*.jar conf/portal/configuration.xml &>/dev/null
-  if [[ $1 == "undo" ]]; then
-    cp -rf ~/.exocmd/sso/sso-integration_def.xml conf/portal/configuration.xml &>/dev/null
-  else
-    cp -rf ~/.exocmd/sso/sso-integration_configuration.xml conf/portal/configuration.xml &>/dev/null
-  fi
-  jar -uvf ./lib/sso-integration-*.jar conf/portal/configuration.xml &>/dev/null
-  isAlr=""
-  rm -rf conf/portal &>/dev/null
-  if [[ -f gatein/conf/exo.properties ]]; then
-    isAlr="$(cat gatein/conf/exo.properties | grep gatein.sso.cas.server)"
-  else
-    cp gatein/conf/exo-sample.properties gatein/conf/exo.properties &>/dev/null
-  fi
-  if [[ $isAlr == "" ]]; then
-    cat ~/.exocmd/sso/cas_exo.properties >>gatein/conf/exo.properties
-  fi
-  if [[ $1 == "undo" ]]; then
-    echo "Your server is now set to default!"
-  else
-    echo "PLF Server Path: $(pwd)"
-    echo "CAS Server Path: $(realpath ../cas-server)"
-    exoprint_suc "Your server is now set with CAS Server!"
-    if [[ $1 == "--run" ]]; then
-      ../cas-server/bin/startup.sh
+    if [ ! -f cas-plugin.zip ]; then
+      exoprint_op "Installing exo-cas addon"
+      ./addon install exo-cas
     fi
   fi
-}
+  clear
+  exoprint_op "Getting Tomcat Server $tomcatv..."
+  if ! wget $TOMCATDNURL -O $TOMCATFILEPATH --progress=bar:force 2>&1 | progressfilt; then
+    exoprint_err "Could not download Tomcat Server !"
+    return
+  fi
+  if ! tar -xvf $TOMCATFILEPATH -C /tmp/ &>/dev/null; then
+    exoprint_err "Could not extract Tomcat Server Archive !"
+    return
+  fi
+  if ! rm -rf $TOMCATDIRPATH/webapps/* &>/dev/null; then
+    exoprint_err "Could not cleanup Tomcat Server webapps !"
+    return
+  fi
+  if ! eval "sed -i 's/8080/$(echo $srvport)/g' '$TOMCATDIRPATH/conf/server.xml'" &>/dev/null; then
+    exoprint_err "Could not change port 8080 for Tomcat Server !"
+    return
+  fi
+  if ! eval "sed -i 's/8443/$(echo ${srvport:0:2}43)/g' '$TOMCATDIRPATH/conf/server.xml'" &>/dev/null; then
+    exoprint_err "Could not change port 8443 for Tomcat Server !"
+    return
+  fi
+  if ! eval "sed -i 's/8009/$(echo ${srvport:0:2}09)/g' '$TOMCATDIRPATH/conf/server.xml'" &>/dev/null; then
+    exoprint_err "Could not change port 8009 for Tomcat Server !"
+    return
+  fi
+  if ! eval "sed -i 's/8005/$(echo ${srvport:0:2}05)/g' '$TOMCATDIRPATH/conf/server.xml'" &>/dev/null; then
+    exoprint_err "Could not change port 8005 for Tomcat Server !"
+    return
+  fi
+  CASDNURL="https://repo1.maven.org/maven2/org/jasig/cas/cas-server-uber-webapp/$casv/cas-server-uber-webapp-$casv.war"
+  CASFILEPATH="/tmp/cas.war"
+  clear
+  exoprint_op "Getting CAS Webapp $casv..."
+  if ! wget $CASDNURL -O $CASFILEPATH --progress=bar:force 2>&1 | progressfilt; then
+    exoprint_err "Could not download CAS WAR Package !"
+    return
+  fi
+  TMPWORKDIR="/tmp/cas_wk"
+  if ! rm -rf $TMPWORKDIR && mkdir -p $TMPWORKDIR &>/dev/null; then
+    exoprint_err "Could not create CAS Temp Directory !"
+    return
+  fi
+  if ! unzip $CASFILEPATH WEB-INF/deployerConfigContext.xml -d $TMPWORKDIR &>/dev/null; then
+    exoprint_err "Could not extract CAS webapp to Temp Directory !"
+    return
+  fi
+  if ! unzip cas-plugin.zip -d $TMPWORKDIR/WEB-INF/lib/ &>/dev/null; then
+    exoprint_err "Could not extract Lib Files to Temp Directory !"
+    return
+  fi
+  sed -i 's/class="org.jasig.cas.authentication.handler.support.SimpleTestUsernamePasswordAuthenticationHandler" \/>/class="org.gatein.sso.cas.plugin.AuthenticationPlugin"><property name="gateInProtocol"><value>http<\/value><\/property><property name="gateInHost"><value>localhost<\/value><\/property><property name="gateInPort"><value>8080<\/value><\/property><property name="gateInContext"><value>portal<\/value><\/property><property name="httpMethod"><value>POST<\/value><\/property><\/bean>/g' $TMPWORKDIR/WEB-INF/deployerConfigContext.xml
+  sed -i 's/<bean id="primaryAuthenticationHandler" class="org.jasig.cas.authentication.AcceptUsersAuthenticationHandler"><property name="users"><map><entry key="casuser" value="Mellon"\/><\/map><\/property><\/bean>/<bean id="primaryAuthenticationHandler" class="org.gatein.sso.cas.plugin.CAS40AuthenticationPlugin"><property name="gateInProtocol"><value>http<\/value><\/property><property name="gateInHost"><value>localhost<\/value><\/property><property name="gateInPort"><value>8080<\/value><\/property><property name="gateInContext"><value>portal<\/value><\/property><property name="httpMethod"><value>POST<\/value><\/property><\/bean>/g' $TMPWORKDIR/WEB-INF/deployerConfigContext.xml
+  cd $TMPWORKDIR
+  zip -ur ../cas.war WEB-INF &>/dev/null
+  cd -
+  rm -rf $TMPWORKDIR #! Optimization neede + Error Handling
 
+  if ! mv -uf $CASFILEPATH $TOMCATDIRPATH/webapps/ &>/dev/null; then
+    exoprint_err "Could not copy CAS WAR Package to the server !"
+    return
+  fi
+  if ! mv -uf $TOMCATDIRPATH ../cas-server-$casv &>/dev/null; then
+    exoprint_err "Could not copy CAS Tomcat server beside eXo Platform Server!"
+    return
+  fi
+  clear
+  if [ ! -f "gatein/conf/exo.properties" ]; then touch "gatein/conf/exo.properties" || (
+    exoprint_err "Could not create exo.properties file!"
+    return
+  ); fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.enabled')" ]; then echo "gatein.sso.enabled=true" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.callback.enabled')" ]; then echo "gatein.sso.callback.enabled=\${gatein.sso.enabled}" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.login.module.enabled')" ]; then echo "gatein.sso.login.module.enabled=\${gatein.sso.enabled}" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.login.module.class')" ]; then echo "gatein.sso.login.module.class=org.gatein.sso.agent.login.SSOLoginModule" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.cas.server.url')" ]; then echo "gatein.sso.cas.server.url=http://localhost:$srvport/cas" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.portal.url')" ]; then echo "gatein.sso.portal.url=http://localhost:8080" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.filter.logout.class')" ]; then echo "gatein.sso.filter.logout.class=org.gatein.sso.agent.filter.CASLogoutFilter" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.filter.logout.url')" ]; then echo "gatein.sso.filter.logout.url=\${gatein.sso.server.url}/logout" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.filter.login.sso.url')" ]; then echo "gatein.sso.filter.login.sso.url=\${gatein.sso.cas.server.url}/login?service=\${gatein.sso.portal.url}/@@portal.container.name@@/initiatessologin" >>"gatein/conf/exo.properties"; fi
+  CASSRVFULLPATH="$(realpath ../cas-server-$casv)"
+  exoprint_suc "The CAS Server \e]8;;file://$CASSRVFULLPATH\acas-server-$casv\e]8;;\a has been created !"
+}
 # @Public: Clone eXo-Dev Repository
 function exocldev() {
   git clone "git@github.com:exodev/$1.git"
@@ -556,18 +649,31 @@ function exoidldap() {
     fi
     return
   fi
-  if [ -z "$(command -v sed)" ]; then exoprint_err "sed command is not installed !" ; return ; fi
-  if [ -z "$(command -v grep)" ]; then exoprint_err "grep command is not installed !" ; return ; fi
+  if [ -z "$(command -v sed)" ]; then
+    exoprint_err "sed command is not installed !"
+    return
+  fi
+  if [ -z "$(command -v grep)" ]; then
+    exoprint_err "grep command is not installed !"
+    return
+  fi
 
   EXOCMD="$HOME/.exocmd"
   TMPDIR="/tmp/ldap-extension"
   if [ ! -d "$EXOCMD" ] || [ ! -f "$EXOCMD/extension.zip" ]; then
-    exoprint_err "Could not get files, please reinstall eXo-Shell Commands !" ; return
+    exoprint_err "Could not get files, please reinstall eXo-Shell Commands !"
+    return
   fi
   PLFVERSION=$(find lib -name 'commons-api-*' | sed -E 's/lib\/commons-api-//g' | sed -E 's/.jar//g')
-  if [ -z "$PLFVERSION" ]; then exoprint_err "Could not get platform version !" ; return; fi
+  if [ -z "$PLFVERSION" ]; then
+    exoprint_err "Could not get platform version !"
+    return
+  fi
   PLFBRANCH=$(echo ${PLFVERSION%.*}".x")
-  if [ -z "$PLFBRANCH" ]; then exoprint_err "Could not get platform major version !" ; return; fi
+  if [ -z "$PLFBRANCH" ]; then
+    exoprint_err "Could not get platform major version !"
+    return
+  fi
   printf "Input adminDN: (Default cn=admin,dc=exosupport,dc=com) "
   read adminDN && echo
   if [ -z "$adminDN" ]; then adminDN="cn=admin,dc=exosupport,dc=com"; fi
@@ -579,29 +685,86 @@ function exoidldap() {
   if [ -z "$providerURL" ]; then providerURL="ldap://127.0.0.1:389"; fi
   rm -rf $TMPDIR &>/dev/null
   if [ ! -z $(command -v crc32) ] && [[ "$(crc32 $EXOCMD/extension.zip)" != "3480e93e" ]]; then exoprint_warn "Tampered extension.zip file!"; fi
-  if ! unzip -o $EXOCMD/extension.zip -d $TMPDIR &>/dev/null ; then exoprint_err "Could not create extension !" ; return ; fi
-  if ! eval "sed -i 's/PLFBRANCH/$PLFBRANCH/g' $TMPDIR/pom.xml" &>/dev/null ; then exoprint_err "Could not set major version in the maven project !" ; return ; fi
-  if ! eval "sed -i 's/PLFVERSION/$PLFVERSION/g' $TMPDIR/pom.xml" &>/dev/null  ; then exoprint_err "Could not set version in the maven project !" ; return ; fi
-  if ! sed -i 's/EXTID/ldap-extension/g' $TMPDIR/pom.xml &>/dev/null  ; then exoprint_err "Could not set artificatid in the maven project !" ; return ; fi
-  if ! sed -i 's/EXTDESC/ldap Extension/g' $TMPDIR/pom.xml &>/dev/null  ; then exoprint_err "Could not set description in the maven project !" ; return ; fi
+  if ! unzip -o $EXOCMD/extension.zip -d $TMPDIR &>/dev/null; then
+    exoprint_err "Could not create extension !"
+    return
+  fi
+  if ! eval "sed -i 's/PLFBRANCH/$PLFBRANCH/g' $TMPDIR/pom.xml" &>/dev/null; then
+    exoprint_err "Could not set major version in the maven project !"
+    return
+  fi
+  if ! eval "sed -i 's/PLFVERSION/$PLFVERSION/g' $TMPDIR/pom.xml" &>/dev/null; then
+    exoprint_err "Could not set version in the maven project !"
+    return
+  fi
+  if ! sed -i 's/EXTID/ldap-extension/g' $TMPDIR/pom.xml &>/dev/null; then
+    exoprint_err "Could not set artificatid in the maven project !"
+    return
+  fi
+  if ! sed -i 's/EXTDESC/ldap Extension/g' $TMPDIR/pom.xml &>/dev/null; then
+    exoprint_err "Could not set description in the maven project !"
+    return
+  fi
   CONFDIR="$TMPDIR/src/main/webapp/WEB-INF/conf"
-  if ! unzip -j webapps/portal.war WEB-INF/conf/organization/idm-configuration.xml -d "$CONFDIR/organization/" &>/dev/null  ; then exoprint_err "Could not get idm-configuration.xml file !"  ; return ; fi
-  if ! unzip -j webapps/portal.war WEB-INF/conf/organization/picketlink-idm/examples/picketlink-idm-openldap-config.xml -d "$CONFDIR/organization/picketlink-idm/" &>/dev/null  ; then exoprint_err "Could not get picketlink-idm-ldap-config.xml file !"  ; return ; fi
-  if ! mv "$CONFDIR/organization/picketlink-idm/picketlink-idm-openldap-config.xml" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not get picketlink-idm-ldap-config.xml file !"  ; return ; fi
-  if ! sed -i "s/<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-config.xml<\\/value>/<!--<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-config.xml<\\/value>-->/g" "$CONFDIR/organization/idm-configuration.xml" &>/dev/null  ; then exoprint_err "Could not deactivate the default configuration file !"  ; return ; fi
-  if ! sed -i "s/<!--<value>war:\\/conf\\/organization\\/picketlink-idm\\/examples\\/picketlink-idm-ldap-config.xml<\\/value>-->/<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-ldap-config.xml<\\/value>/g" "$CONFDIR/organization/idm-configuration.xml" &>/dev/null  ; then exoprint_err "Could not activate picketlink-idm-ldap-config.xml file !"  ; return ; fi
-  if ! sed -i "s/ldap:\\/\\/localhost:1389/$(echo $providerURL | sed 's#/#\\/#g')/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the providerURL!"  ; return ; fi
-  if ! sed -i "s/<value>secret<\\/value>/<value>$adminPassword<\\/value>/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the adminPassword!"  ; return ; fi
-  if ! sed -i "s/cn=Manager,dc=my-domain,dc=com/$adminDN/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the adminDN!"  ; return ; fi
+  if ! unzip -j webapps/portal.war WEB-INF/conf/organization/idm-configuration.xml -d "$CONFDIR/organization/" &>/dev/null; then
+    exoprint_err "Could not get idm-configuration.xml file !"
+    return
+  fi
+  if ! unzip -j webapps/portal.war WEB-INF/conf/organization/picketlink-idm/examples/picketlink-idm-openldap-config.xml -d "$CONFDIR/organization/picketlink-idm/" &>/dev/null; then
+    exoprint_err "Could not get picketlink-idm-ldap-config.xml file !"
+    return
+  fi
+  if ! mv "$CONFDIR/organization/picketlink-idm/picketlink-idm-openldap-config.xml" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null; then
+    exoprint_err "Could not get picketlink-idm-ldap-config.xml file !"
+    return
+  fi
+  if ! sed -i "s/<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-config.xml<\\/value>/<!--<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-config.xml<\\/value>-->/g" "$CONFDIR/organization/idm-configuration.xml" &>/dev/null; then
+    exoprint_err "Could not deactivate the default configuration file !"
+    return
+  fi
+  if ! sed -i "s/<!--<value>war:\\/conf\\/organization\\/picketlink-idm\\/examples\\/picketlink-idm-ldap-config.xml<\\/value>-->/<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-ldap-config.xml<\\/value>/g" "$CONFDIR/organization/idm-configuration.xml" &>/dev/null; then
+    exoprint_err "Could not activate picketlink-idm-ldap-config.xml file !"
+    return
+  fi
+  if ! sed -i "s/ldap:\\/\\/localhost:1389/$(echo $providerURL | sed 's#/#\\/#g')/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null; then
+    exoprint_err "Could not set the providerURL!"
+    return
+  fi
+  if ! sed -i "s/<value>secret<\\/value>/<value>$adminPassword<\\/value>/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null; then
+    exoprint_err "Could not set the adminPassword!"
+    return
+  fi
+  if ! sed -i "s/cn=Manager,dc=my-domain,dc=com/$adminDN/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null; then
+    exoprint_err "Could not set the adminDN!"
+    return
+  fi
   DCNAME=$(echo "dc="${adminDN#*dc=})
-  if ! sed -i "s/dc=my-domain,dc=com/$DCNAME/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the DCNAME!"  ; return ; fi
-  if ! sed -i "s/ou=People,o=portal,o=gatein/ou=users/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null  ; then exoprint_err "Could not set the organization unit!" ; return ; fi
-  if ! mvn -f $TMPDIR/pom.xml clean install &>/dev/null  ; then exoprint_err "Could not build the extension!"  ; return ; fi
-  if ! rm -rf webapps/ldap-extension-* &>/dev/null  ; then exoprint_err "Could not remove the old extension!"  ; return ; fi
-  if ! cp -f "$TMPDIR/target/ldap-extension-$PLFBRANCH.war" webapps/ &>/dev/null  ; then exoprint_err "Could not place the extension!"  ; return ; fi
+  if ! sed -i "s/dc=my-domain,dc=com/$DCNAME/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null; then
+    exoprint_err "Could not set the DCNAME!"
+    return
+  fi
+  if ! sed -i "s/ou=People,o=portal,o=gatein/ou=users/g" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null; then
+    exoprint_err "Could not set the organization unit!"
+    return
+  fi
+  if ! mvn -f $TMPDIR/pom.xml clean install &>/dev/null; then
+    exoprint_err "Could not build the extension!"
+    return
+  fi
+  if ! rm -rf webapps/ldap-extension-* &>/dev/null; then
+    exoprint_err "Could not remove the old extension!"
+    return
+  fi
+  if ! cp -f "$TMPDIR/target/ldap-extension-$PLFBRANCH.war" webapps/ &>/dev/null; then
+    exoprint_err "Could not place the extension!"
+    return
+  fi
   EXTFILENAME="$(realpath webapps/ldap-extension-$PLFBRANCH.war)"
   rm -rf $TMPDIR &>/dev/null &>/dev/null || exoprint_warn "Could not remove unecessary files!"
-  if [ ! -f "gatein/conf/exo.properties" ]; then touch "gatein/conf/exo.properties" || (exoprint_err "Could not create exo.properties file!" ; return); fi
+  if [ ! -f "gatein/conf/exo.properties" ]; then touch "gatein/conf/exo.properties" || (
+    exoprint_err "Could not create exo.properties file!"
+    return
+  ); fi
   if [ -z "$(cat gatein/conf/exo.properties | grep '^exo.idm.externalStore.import.cronExpression')" ]; then echo "exo.idm.externalStore.import.cronExpression=0 */1 * ? * *" >>"gatein/conf/exo.properties"; fi
   if [ -z "$(cat gatein/conf/exo.properties | grep '^exo.idm.externalStore.queue.processing.cronExpression')" ]; then echo "exo.idm.externalStore.queue.processing.cronExpression=0 */2 * ? * *" >>"gatein/conf/exo.properties"; fi
   if [ -z "$(cat gatein/conf/exo.properties | grep '^exo.idm.externalStore.queue.processing.error.retries.max')" ]; then echo "exo.idm.externalStore.queue.processing.error.retries.max=5" >>"gatein/conf/exo.properties"; fi
@@ -680,6 +843,10 @@ function exoldapinject() {
     exoprint_err "gpw is not installed !"
     return
   fi
+  if [ -z "$(command -v ldapadd)" ]; then
+    exoprint_err "ldapadd is not installed !"
+    return
+  fi
   echo -n Min User ID:
   read lwid
   echo -n Max User ID:
@@ -690,7 +857,7 @@ function exoldapinject() {
     return
   fi
   echo -n "OpenLDAP Domain Config (Example dc=exosupport,dc=com):"
-  read -s dconfig
+  read dconfig
   echo ""
   echo -n LDAP Admin Password:
   read -s passadmin
@@ -702,7 +869,7 @@ function exoldapinject() {
     echo "Users Password Invalid ! Min Password length is : 6"
     return
   fi
-  if [[ -z "$dconfig" ]]; then
+  if [ -z "$dconfig" ]; then
     dconfig="dc=exosupport,dc=com"
   fi
   if [[ ! $1 == "" ]]; then
@@ -714,7 +881,6 @@ function exoldapinject() {
     lname="$(/usr/bin/gpw 1 $strlen)"
     name="$fname $lname"
     uname="$fname$lname"
-    echo "$i> Injecting: dn: cn=$name,ou=users,$dconfig"
     echo "dn: cn=$name,ou=users,$dconfig
        objectClass: top
        objectClass: account
@@ -725,10 +891,11 @@ function exoldapinject() {
        homeDirectory: /home/users/$uname
        loginShell: /bin/bash
        gecos: $uname
-       userPassword: $mdp" >tmp.ldif
-    ldapadd -x -w $passadmin -D "cn=admin,$dconfig" -f tmp.ldif
+       userPassword: $mdp" >/tmp/tmp.ldif
+    printf "Creating user $name..."
+    if ldapadd -x -w $passadmin -D "cn=admin,$dconfig" -f /tmp/tmp.ldif; then exoprint_suc "OK"; else exoprint_err "Fail"; fi
   done
-  rm -rf tmp.ldif &>/dev/null
+  #rm -rf tmp.ldif &>/dev/null
   exoprint_suc "Users have been injected !"
 }
 ###################################################################################
