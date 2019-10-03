@@ -900,8 +900,8 @@ function exoldapinject() {
 }
 ###################################################################################
 function exoinjectspaces() {
-  SHORT=Hpscvao
-  LONG=host,port,spaceprefix,count,verbose,auth,offset
+  SHORT=HpscvarU
+  LONG=host,port,spaceprefix,count,verbose,auth,visibility,registration,uppercase
   if [[ $1 == "-h" ]] || [[ "$1" == "--help" ]]; then
     usage-spaces
     return
@@ -912,6 +912,7 @@ function exoinjectspaces() {
     #  then getopt has complained about wrong arguments to stdout
     return
   fi
+  re='^[0-9]+$'
   while true; do
     case "$1" in
     -H | --host)
@@ -926,20 +927,34 @@ function exoinjectspaces() {
       spaceprefix="$2"
       shift 2
       ;;
+    -v | --visibility)
+      if [[ "$2" == "public" ]] || [[ "$2" == "hidden" ]]; then
+        visibility="$2"
+      else
+        exoprint_err "Wrong visibility value ! must be public or hidden"
+        return
+      fi
+      shift 2
+      ;;
+    -r | --registration)
+      if [[ "$2" == "open" ]] || [[ "$2" == "validation" ]] || [[ "$2" == "closed" ]]; then
+        registration="$2"
+      else
+        exoprint_err "Wrong registration value ! must be open, validation or closed"
+        return
+      fi
+      shift 2
+      ;;
+    -U | --uppercase)
+      uppercase=1
+      shift
+      ;;
     -c | --count)
       nbOfSpaces="$2"
       shift 2
       ;;
-    -v | --verbose)
-      verbose=y
-      shift
-      ;;
     -a | --auth)
       auth="$2"
-      shift 2
-      ;;
-    -o | --offset)
-      offset="$2"
       shift 2
       ;;
     "")
@@ -954,16 +969,16 @@ function exoinjectspaces() {
   if [ -z "$nbOfSpaces" ]; then
     exoprint_err "Missing number of profiles to create (-c)"
     echo ""
-    usage-spaces
   fi
 
   if [ -z "$host" ]; then host="localhost"; fi
   if [ -z "$port" ]; then port="8080"; fi
   if [ -z "$spaceprefix" ]; then spaceprefix="space"; fi
   if [ -z "$auth" ]; then auth="root:gtn"; fi
-  if [ -z "$offset" ]; then offset=1; fi
+  if [ -z "$visibility" ]; then visibility="public"; fi
+  if [ -z "$registration" ]; then registration="open"; fi
+  if [ -z "$uppercase" ]; then saltregex="a-z"; else saltregex="A-Z"; fi
 
-  re='^[0-9]+$'
   if ! [[ $port =~ $re ]]; then
     exoprint_err "Port must be a number" >&2
     exit 1
@@ -973,18 +988,19 @@ function exoinjectspaces() {
     exit 1
   fi
 
-  spaceIndex=$offset
+  spaceIndex=1
 
   until [ $spaceIndex -gt $nbOfSpaces ]; do
+    displayName=$(head -c 500 /dev/urandom | tr -dc "$saltregex" | fold -w 6 | head -n 1)
     url="http://$host:$port/rest/private/v1/social/spaces"
-    data="{\"displayName\": \"$spaceprefix$spaceIndex\","
+    data="{\"displayName\": \"$displayName\","
     data+="\"description\": \"$spaceprefix$spaceIndex\","
-    data+="\"visibility\": \"public\","
-    data+="\"subscription\": \"open\"}"
+    data+="\"visibility\": \"$visibility\","
+    data+="\"subscription\": \"$registration\"}"
     curlCmd="curl -s -w '%{response_code}' -X POST -u "$auth" -H \"Content-Type: application/json\" --data '$data' $url | grep -o  '[1-9][0-9][0-9]'"
-    printf "Creating space $spaceprefix$spaceIndex..."
+    printf "Creating space displayName=\"$(tput setaf 12)$displayName$(tput init)\"..."
     httprs=$(eval $curlCmd)
-    if [[ "$httprs" =~ "200" ]]; then exoprint_suc "OK"; else exoprint_err "Fail"; fi
+    if [[ "$httprs" =~ "200" ]]; then echo -e "$(tput setaf 2)OK$(tput init)"; else echo -e "$(tput setaf 1)Fail$(tput init)"; fi
     spaceIndex=$(($spaceIndex + 1))
   done
 
@@ -1002,10 +1018,11 @@ usage-users() {
   echo "    -a| --auth           Root credentials Default: root:gtn"
   echo "    -c| --count          number of users to create"
   echo "    -o| --offset         start number of users index to create Default: 1"
+  echo "    -U| --uppercase      Uppercased User Full Name Default: unused"
   echo ""
 }
 ###################################################################################
-usage-sapces() {
+usage-spaces() {
   echo "Usage : exoinjectspaces -c <nb_of_spaces> [options]"
   echo ""
   echo "    -h| --help           help"
@@ -1014,19 +1031,25 @@ usage-sapces() {
   echo "    -s| --spaceprefix    prefix of the injected spaces Default: space"
   echo "    -a| --auth           Root credentials Default: root:gtn"
   echo "    -c| --count          number of spaces to create"
-  echo "    -o| --offset         start number of spaces index to create Default: 1"
+  echo "    -r| --registration   Space registration Default: open"
+  echo "    -v| --visibility     Space visibility Default: public"
+  echo "    -U| --uppercase      Uppercased Space displayName Default: unused"
   echo ""
 }
 ###################################################################################
 function exoinjectusers() {
-  SHORT=HPpscvuao
-  LONG=host,port,userprefix,count,verbose,userpassword,auth,offset
-  if [[ $1 == "-h" ]] || [[ "$1" == "--help" ]]; then usage-users && return; fi
+  SHORT=HPpscvuaoU
+  LONG=host,port,userprefix,count,verbose,userpassword,auth,offset,uppercase
+  if [[ $1 == "-h" ]] || [[ "$1" == "--help" ]]; then
+    usage-users
+    return
+  fi
   PARSED=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
   if [[ $? -ne 0 ]]; then
     exoprint_err "Could not parse arguments"
     return
   fi
+  re='^[0-9]+$'
   while true; do
     case "$1" in
     -H | --host)
@@ -1041,6 +1064,10 @@ function exoinjectusers() {
       userprf="$2"
       shift 2
       ;;
+    -U | --uppercase)
+      uppercase=1
+      shift
+      ;;
     -c | --count)
       nbOfUsers="$2"
       shift 2
@@ -1054,7 +1081,11 @@ function exoinjectusers() {
       shift 2
       ;;
     -o | --offset)
-      offset="$2"
+      if ! [[ $2 =~ $re ]]; then
+        exoprint_err "Offset must be a number" >&2
+        return
+      fi
+      startFrom="$2"
       shift 2
       ;;
     -v | --verbose)
@@ -1079,9 +1110,9 @@ function exoinjectusers() {
   if [ -z "$userprf" ]; then userprf="user"; fi
   if [ -z "$passwd" ]; then passwd="123456"; fi
   if [ -z "$auth" ]; then auth="root:gtn"; fi
-  if [ -z "$offset" ]; then offset=1; fi
+  if [ -z "$startFrom" ]; then startFrom=1; fi
+  if [ -z "$uppercase" ]; then saltregex="a-z"; else saltregex="A-Z"; fi
 
-  re='^[0-9]+$'
   if ! [[ $port =~ $re ]]; then
     exoprint_err "Port must be a number" >&2
     return
@@ -1090,21 +1121,22 @@ function exoinjectusers() {
     exoprint_err "Number of profiles must be a number" >&2
     return
   fi
-  userIndex=$offset
+  userIndex=$startFrom
   until [ $userIndex -gt $nbOfUsers ]; do
+    firstname=$(head -c 500 /dev/urandom | tr -dc "$saltregex" | fold -w 6 | head -n 1)
+    lastname=$(head -c 500 /dev/urandom | tr -dc "$saltregex" | fold -w 6 | head -n 1)
     url="http://$host:$port/rest/private/v1/social/users"
     data="{\"id\": \"$userIndex\","
     data+="\"username\": \"$userprf$userIndex\","
-    data+="\"firstname\": \"$userprf$userIndex\","
-    data+="\"lastname\": \"$userprf$userIndex\","
-    data+="\"firstname\": \"$userprf$userIndex\","
+    data+="\"lastname\": \"$lastname\","
+    data+="\"firstname\": \"$firstname\","
     data+="\"fullname\": \"$userprf$userIndex\","
     data+="\"password\": \"$passwd\","
     data+="\"email\": \"$userprf$userIndex@exomail.org\"}"
     curlCmd="curl -s -w '%{response_code}' -X POST -u "$auth" -H \"Content-Type: application/json\" --data '$data' $url | grep -o  '[1-4][0-9][0-9]'"
-    printf "Creating user $userprf$userIndex..."
+    printf "Creating user ID=$userprf$userIndex, Full Name=\"$(tput setaf 12)$firstname $lastname$(tput init)\"..."
     httprs=$(eval $curlCmd)
-    if [[ "$httprs" =~ "200" ]]; then exoprint_suc "OK"; else exoprint_err "Fail"; fi
+    if [[ "$httprs" =~ "200" ]]; then echo -e "$(tput setaf 2)OK$(tput init)"; else echo -e "$(tput setaf 1)Fail$(tput init)"; fi
     userIndex=$(($userIndex + 1))
   done
 }
