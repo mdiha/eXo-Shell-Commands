@@ -1143,6 +1143,35 @@ function exoinjectusers() {
 
 ###################################################################################
 
+function exochangeport() {
+  if [ -z "$1" ] || [[ ! "$1" =~ ^[0-9]+$ ]]; then
+    exoprint_err "Please specify a correct server port!"
+    return
+  fi
+
+  if [ $(isTomcat) == 0 ] && [ $(isJBoss) == 0 ]; then
+    exoprint_err "Please check you are working on eXo Platform server instance!"
+    return
+  fi
+  if [ $(isTomcat) != 0 ]; then
+    if eval "sed -Ei 's/port=\"[0-9]+\" protocol=\"org.apache.coyote.http11.Http11NioProtocol\"/port=\"$1\" protocol=\"org.apache.coyote.http11.Http11NioProtocol\"/g' conf/server.xml" &>/dev/null; then
+      exoprint_suc "eXo Server Port has been changed to $1 !"
+    else
+      exoprint_err "Could not change eXo Server to $1 !"
+    fi
+  fi
+  if [ $(isJBoss) != 0 ]; then
+    if eval "sed -Ei 's/jboss.http.port:[0-9]+/jboss.http.port:$1/g' standalone/configuration/standalone-exo.xml" &>/dev/null; then
+      exoprint_suc "eXo Server Port has been changed to $1 !"
+    else
+      exoprint_err "Could not change eXo Server to $1 !"
+    fi
+  fi
+
+}
+
+###################################################################################
+
 function exohelp() {
   echo -e "$(tput setaf 2)****************************************$(tput init)"
   echo -e "$(tput setaf 3) eXo Shell Commands by Houssem B. A. v2 $(tput init)"
