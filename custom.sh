@@ -280,7 +280,7 @@ function exoget() {
   SRVURI="repository.exoplatform.org/content/groups/private/com/exoplatform/platform/distributions/plf-enterprise-$dntype-standalone/$dnversion"
   ZIPFILENAME="plf-enterprise-$dntype-standalone-$dnversion.zip"
   SRVFULLURI="https://$cred@$SRVURI"
-  if [[ $dnversion == SNAPSHOTPLFVERSION ]]; then
+  if [[ $dnversion == $SNAPSHOTPLFVERSION ]]; then
     pglist=($(wget -qO- "$SRVFULLURI/" | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | sort | uniq | grep '\.zip$'))
     pgoutput=${pglist[${#pglist[@]} - 1]}
     ZIPFILENAME=$(echo "${pgoutput##*/}")
