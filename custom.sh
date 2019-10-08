@@ -267,19 +267,20 @@ function exoget() {
     exoprint_err "There is not server type called $1 !"
     return
   fi
+  SNAPSHOTPLFVERSION="6.0.x-SNAPSHOT"
   if [[ $2 == "latest" ]] || [[ $2 =~ "-M" ]]; then
     if [[ $dntype == "jbosseap" ]]; then
       exoprint_err "There is no SNAPSHOT versions for JBoss Server !"
       return
     fi
-    dnversion="5.3.x-SNAPSHOT"
+    dnversion=$SNAPSHOTPLFVERSION
   else
     dnversion="$2"
   fi
   SRVURI="repository.exoplatform.org/content/groups/private/com/exoplatform/platform/distributions/plf-enterprise-$dntype-standalone/$dnversion"
   ZIPFILENAME="plf-enterprise-$dntype-standalone-$dnversion.zip"
   SRVFULLURI="https://$cred@$SRVURI"
-  if [[ $dnversion == "5.3.x-SNAPSHOT" ]]; then
+  if [[ $dnversion == SNAPSHOTPLFVERSION ]]; then
     pglist=($(wget -qO- "$SRVFULLURI/" | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | sort | uniq | grep '\.zip$'))
     pgoutput=${pglist[${#pglist[@]} - 1]}
     ZIPFILENAME=$(echo "${pgoutput##*/}")
