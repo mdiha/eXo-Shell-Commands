@@ -889,28 +889,29 @@ function exoidad() {
 # @Public: Update eXo Shell Commands
 function exoupdate() {
   UPGITURL="https://github.com/hbenali/eXo-Shell-Commands"
-  FOLDERNAME="eXo-Shell-Commands"
   WORKINGDIR="$HOME/.exocmd"
   if [ -z "$(command git)" ]; then
-    exoprint_err "Git command must be installed ! " && return
+    exoprint_err "Git command must be installed ! "
+    return
   fi
   if [ ! -d "$WORKINGDIR" ]; then
-    exoprint_err "Could not update ! " && return
+    exoprint_err "Could not update ! "
+    return
   fi
-  if [ -d "$WORKINGDIR/$FOLDERNAME/.git" ]; then
-    git -C "$WORKINGDIR/$FOLDERNAME" fetch &>/dev/null
+  if [ -d "$WORKINGDIR/.git" ]; then
+    git -C "$WORKINGDIR/" fetch &>/dev/null
     HEADHASH=$(git rev-parse HEAD)
     UPSTREAMHASH=$(git rev-parse master@{upstream})
     if [ "$HEADHASH" == "$UPSTREAMHASH" ]; then
       echo "You have already working on the latest version!"
+      return
     fi
-    git -C "$WORKINGDIR/$FOLDERNAME" pull --force &>/dev/null
+    git -C "$WORKINGDIR/" pull --force &>/dev/null
   else
-    git clone "$UPGITURL" "$WORKINGDIR/$FOLDERNAME" &>/dev/null
+    git clone "$UPGITURL" "$WORKINGDIR/" &>/dev/null
   fi
-  chmod +x "$WORKINGDIR/$FOLDERNAME/install.sh" &>/dev/null
   source "$WORKINGDIR/custom.sh"
-  "$WORKINGDIR/$FOLDERNAME/install.sh" "$WORKINGDIR/$FOLDERNAME" || exoprint_err "Error while updating! "
+  exoprint_suc "You have updated eXo-Shell-Commands to the latest version !"
 }
 
 # @Public: Inject Users to LDAP Server
