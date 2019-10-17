@@ -1,6 +1,6 @@
 #!/bin/bash
 # eXo Basic Shell Commands
-# Released by Houssem B. Ali  eXo Support Lab 2019
+# Released by Houssem B. Ali  eXo Support Lab
 
 # @Public: Clear DATA FOR TOMCAT & JBOSS
 function exodataclear() {
@@ -906,9 +906,11 @@ function exoupdate() {
       echo "You have already working on the latest version!"
       return
     fi
+    git -C "$WORKINGDIR/" checkout master --force &>/dev/null
     git -C "$WORKINGDIR/" pull --force &>/dev/null
   else
-    git clone "$UPGITURL" "$WORKINGDIR/" &>/dev/null
+    exoprint_op "Please wait..."
+    git -C "$WORKINGDIR/" init  &> /dev/null && git -C "$WORKINGDIR/" remote add origin "$UPGITURL"  &> /dev/null && git -C "$WORKINGDIR/" fetch  &> /dev/null && git -C "$WORKINGDIR/"  checkout -t origin/master -f  &> /dev/null || ( exoprint_err "Could not update eXo-Shell-Commands !"; return)
   fi
   source "$WORKINGDIR/custom.sh"
   exoprint_suc "You have updated eXo-Shell-Commands to the latest version !"
