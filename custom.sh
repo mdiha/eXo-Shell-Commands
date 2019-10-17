@@ -901,10 +901,8 @@ function exoupdate() {
     return
   fi
   if [ -d "$WORKINGDIR/.git" ]; then
-    git -C "$WORKINGDIR/" fetch &>/dev/null
     if [ -z "$(git diff origin/master)" ]; then
       echo "You have already working on the latest version!"
-      return
     fi
     git -C "$WORKINGDIR/" checkout master --force &>/dev/null
     git -C "$WORKINGDIR/" pull --force &>/dev/null
