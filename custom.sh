@@ -533,6 +533,81 @@ function exocldev() {
   cd $1
 }
 
+# @Public: Add SAML SSO to eXo Platform Server Instance
+function exossosaml() {
+  if [ $(isTomcat) = 0 -a $(isJBoss) = 0 ]; then
+    exoprint_err "Please check you are working on eXo Platform server instance!"
+    return
+  fi
+  if [ $(isJBoss) != 0 ]; then
+    exoprint_warn "Not supported For JBoss Server!"
+    return
+  fi
+  exoprint_op "Installing eXo SAML Addon..."
+  ./addon install exo-saml --no-compat --conflict=overwrite --force
+  if [ ! -f lib/jboss-security-spi-3.0.0.Final.jar ]; then
+    exoprint_op "Downloading jboss-security-spi-3.0.0.Final.jar..."
+    if wget -qO "lib/jboss-security-spi-3.0.0.Final.jar" "https://repo1.maven.org/maven2/org/picketbox/jboss-security-spi/3.0.0.Final/jboss-security-spi-3.0.0.Final.jar"; then
+      exoprint_err "Could not download jboss-security-spi-3.0.0.Final.jar !"
+      return
+    fi
+  fi
+  if [ ! -d "gatein/conf/saml2" ] && [ -d "standalone/configuration/gatein/saml2" ]; then
+    cp -rf "standalone/configuration/gatein/saml2" "gatein/conf" &>/dev/null
+    rm -rf "standalone" &>/dev/null
+  fi
+  # Workaround Begin {
+  #################################################
+  printf "Input picketLink-sp.xml configFile Path: (Default \${catalina.home}/gatein/conf/saml2/picketlink-sp.xml) "
+  read picketLinkCFGFIle && echo
+  if [ -z "$picketLinkCFGFIle" ]; then picketLinkCFGFIle="\${catalina.home}/gatein/conf/saml2/picketlink-sp.xml"; fi
+  mkdir -p conf/Catalina &>/dev/null
+  CATALINACONFPORTAL="conf/Catalina/portal.xml"
+  echo "<Context path='/portal' docBase='portal' reloadable='true' crossContext='true' privileged='true'>" >$CATALINACONFPORTAL
+  echo "  <Realm className='org.apache.catalina.realm.JAASRealm'" >>$CATALINACONFPORTAL
+  echo "         appName='gatein-domain'" >>$CATALINACONFPORTAL
+  echo "         userClassNames='org.exoplatform.services.security.jaas.UserPrincipal'" >>$CATALINACONFPORTAL
+  echo "         roleClassNames='org.exoplatform.services.security.jaas.RolePrincipal'/>" >>$CATALINACONFPORTAL
+  echo "  <Valve" >>$CATALINACONFPORTAL
+  echo "      className='org.picketlink.identity.federation.bindings.tomcat.sp.ServiceProviderAuthenticator'" >>$CATALINACONFPORTAL
+  echo "      configFile=\"$picketLinkCFGFIle\" />" >>$CATALINACONFPORTAL
+  echo "  <Valve" >>$CATALINACONFPORTAL
+  echo "      className='org.apache.catalina.authenticator.FormAuthenticator'" >>$CATALINACONFPORTAL
+  echo "      characterEncoding='UTF-8'/>" >>$CATALINACONFPORTAL
+  echo "</Context>" >>$CATALINACONFPORTAL
+  #################################################
+  # } EO Workaround
+  SRVPORT=$(grep -Pi 'port=\"[0-9]+\" protocol=\"org.apache.coyote.http11.Http11NioProtocol\"' conf/server.xml | grep -oP '\d{4}' | head -n 1)
+  if [ -z "$SRVPORT" ]; then SRVPORT="8080"; fi
+  if [ ! -f "gatein/conf/exo.properties" ]; then touch "gatein/conf/exo.properties" || (
+    exoprint_err "Could not create exo.properties file!"
+    return
+  ); fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.enabled')" ]; then echo "gatein.sso.enabled=true" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.callback.enabled')" ]; then echo "gatein.sso.callback.enabled=\${gatein.sso.enabled}" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.login.module.enabled=')" ]; then echo "gatein.sso.login.module.enabled=\${gatein.sso.enabled}" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.login.module.class')" ]; then echo "gatein.sso.login.module.class=org.gatein.sso.agent.login.SAML2IntegrationLoginModule" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.filter.login.sso.url')" ]; then echo "gatein.sso.filter.login.sso.url=/@@portal.container.name@@/dologin" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.filter.initiatelogin.enabled')" ]; then echo "gatein.sso.filter.initiatelogin.enabled=false" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.valve.enabled')" ]; then echo "gatein.sso.valve.enabled=\${gatein.sso.enabled}" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.valve.class')" ]; then echo "gatein.sso.valve.class=org.picketlink.identity.federation.bindings.tomcat.sp.ServiceProviderAuthenticator" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.saml.config.file')" ]; then echo "gatein.sso.saml.config.file=$picketLinkCFGFIle" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.idp.host')" ]; then echo "gatein.sso.idp.host=" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.idp.url')" ]; then echo "gatein.sso.idp.url=http://\${gatein.sso.idp.host}:8080/" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.sp.url')" ]; then echo "gatein.sso.sp.url=http://localhost:$SRVPORT/portal/dologin" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.picketlink.keystore')" ]; then echo "gatein.sso.picketlink.keystore=\${catalina.home}/gatein/conf/saml2/jbid_test_keystore.jks" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.valve.class')" ]; then echo "gatein.sso.valve.class=org.gatein.sso.saml.plugin.valve.ServiceProviderAuthenticator" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.filter.logout.class')" ]; then echo "gatein.sso.filter.logout.class=org.gatein.sso.saml.plugin.filter.SAML2LogoutFilter" >>"gatein/conf/exo.properties"; fi
+
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.filter.logout.enabled')" ]; then echo "gatein.sso.filter.logout.enabled=true" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^#gatein.sso.filter.logout.class')" ]; then echo "#gatein.sso.filter.logout.class=org.gatein.sso.agent.filter.SAML2LogoutFilter" >>"gatein/conf/exo.properties"; fi
+  if [ -z "$(cat gatein/conf/exo.properties | grep '^gatein.sso.filter.logout.url')" ]; then echo "gatein.sso.filter.logout.url=\${gatein.sso.sp.url}?GLO=true" >>"gatein/conf/exo.properties"; fi
+  #  if [ -z "$(cat gatein/conf/exo.properties | grep '^')" ]; then echo "" >>"gatein/conf/exo.properties"; fi
+
+  exoprint_suc "You can also customize SAML configuration with \e]8;;file://"$(realpath gatein/conf/exo.properties)"\aexo.properties\e]8;;\a file."
+
+}
+
 # @Public: Clone eXo-Addons Repository
 function exocladd() {
   git clone "git@github.com:exo-addons/$1.git"
@@ -1172,6 +1247,51 @@ function exochangeport() {
 
 ###################################################################################
 
+function exojetbrains() {
+  if [[ $1 == "-d" ]]; then
+    if [ -z "$2" ]; then
+      exoprint_err "Missing Jetbrains directory parameter!"
+      return
+    else
+      WKDIR="$2"
+    fi
+  else
+    WKDIR=$(pwd)
+  fi
+  if [ ! -f "$WKDIR/bin/inspect.sh" ]; then
+    exoprint_err "Please make sure you are working on a JetBrains Product"
+    return
+  fi
+
+  exoprint_op "Downloading JetBrains activation agent...\n "
+  JETCRX="http://dl.downloadly.ir/Files/Software2/JetBrains_Agent_2.2.0_Downloadly.ir.rar"
+  DNCRXFILE="/tmp/JetBrains_Agent.rar"
+  wget --show-progress -qO $DNCRXFILE $JETCRX
+  [ -f $DNCRXFILE ] || (
+    exoprint_err "Could not find JetBrains_Agent.rar!"
+    return
+  )
+  if ! dpkg -l unrar &>/dev/null; then sudo apt install -y unrar; fi
+  exoprint_op "Activating JetBrains... "
+  VMOPTFILE=$(find -name *64.vmoptions)
+  [ -z $VMOPTFILE ] && VMOPTFILE=$(find -name *.vmoptions)
+  if [ -z $VMOPTFILE ]; then
+    exoprint_err "Could not find any Jetbreans Software!"
+    return
+  fi
+  echo "Y" | unrar x JetBrains_Agent.rar */jetbrains-agent.jar -ep &>/dev/null
+  AGENTFILE="/tmp/jetbrains-agent.jar"
+  [ -e $AGENTFILE ] || (
+    exoprint_err "Could not find agent file !"
+    return
+  )
+  cp -f $AGENTFILE "$WKDIR/bin/" &>/dev/null
+  [ -z $(grep -i "^-javaagent:" $VMOPTFILE | grep "jetbrains-agent") ] && echo "-javaagent:\"$(realpath '$WKDIR/bin/jetbrains-agent.jar')\"" >>$VMOPTFILE
+  [ ! -z $(grep -i "jetbrains-agent.jar" $VMOPTFILE) ] && exoprint_suc "JetBrains Product has been activated !" || exoprint_err "Could not activate JetBrains Product!"
+}
+
+###################################################################################
+
 function exohelp() {
   echo -e "$(tput setaf 2)****************************************$(tput init)"
   echo -e "$(tput setaf 3) eXo Shell Commands by Houssem B. A. v2 $(tput init)"
@@ -1231,6 +1351,8 @@ function exohelp() {
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exocladd <repo_name>: Clone eXo-addons Github Repository."
   echo "-- exoupdate:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exoupdate: Update eXo Shell Commands"
+  echo "-- exojetbrains:"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exojetbrains [-d <JetBrains_Directory>]: Activate any JetBrains Product"
 }
 
 # @Private: Print Error Message
