@@ -1,7 +1,7 @@
 #!/bin/bash
 # eXo Basic Shell Commands
 # Released by Houssem B. Ali - eXo Support LAB 2019
-# eXo-Shell-Commands. Functions definitions 
+# eXo-Shell-Commands. Functions definitions
 
 
 # @Public: Clear DATA FOR TOMCAT & JBOSS
@@ -902,9 +902,7 @@ function exoupdate() {
   fi
   if [ -d "$WORKINGDIR/.git" ]; then
     git -C "$WORKINGDIR/" fetch &>/dev/null
-    HEADHASH=$(git rev-parse HEAD)
-    UPSTREAMHASH=$(git rev-parse master@{upstream})
-    if [ "$HEADHASH" == "$UPSTREAMHASH" ]; then
+    if [ -z "$(git diff origin master)" ]; then
       echo "You have already working on the latest version!"
       return
     fi
