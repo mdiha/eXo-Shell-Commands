@@ -4,7 +4,7 @@
 # eXo-Shell-Commands. Functions definitions
 
 
-# @Public: Clear DATA FOR TOMCAT & JBOSS
+# @Public: Clear DATA FOR eXo TOMCAT & JBOSS
 function exodataclear() {
   if [ $(isTomcat) == 0 -a $(isJBoss) == 0 ]; then
     exoprint_err "Please check you are working on eXo Platform server instance!"
