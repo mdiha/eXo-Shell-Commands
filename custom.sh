@@ -903,6 +903,8 @@ function exoupdate() {
   if [ -d "$WORKINGDIR/.git" ]; then
     if [ -z "$(git diff origin/master)" ]; then
       echo "You have already working on the latest version!"
+    else
+      exoprint_suc "You have updated eXo-Shell-Commands to the latest version !"
     fi
     git -C "$WORKINGDIR/" checkout master --force &>/dev/null
     git -C "$WORKINGDIR/" pull --force &>/dev/null
@@ -911,7 +913,6 @@ function exoupdate() {
     git -C "$WORKINGDIR/" init  &> /dev/null && git -C "$WORKINGDIR/" remote add origin "$UPGITURL"  &> /dev/null && git -C "$WORKINGDIR/" fetch  &> /dev/null && git -C "$WORKINGDIR/"  checkout -t origin/master -f  &> /dev/null || ( exoprint_err "Could not update eXo-Shell-Commands !"; return)
   fi
   source "$WORKINGDIR/custom.sh"
-  exoprint_suc "You have updated eXo-Shell-Commands to the latest version !"
 }
 
 # @Public: Inject Users to LDAP Server
