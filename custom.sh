@@ -974,7 +974,8 @@ function exoldapinject() {
   #rm -rf tmp.ldif &>/dev/null
   exoprint_suc "Users have been injected !"
 }
-###################################################################################
+
+# @Public: Inject Spaces to eXo Server Instance
 function exoinjectspaces() {
   SHORT=HpscvarU
   LONG=host,port,spaceprefix,count,verbose,auth,visibility,registration,uppercase
@@ -1082,7 +1083,7 @@ function exoinjectspaces() {
 
 }
 
-###################################################################################
+# @Private: Inject users help
 usage-users() {
   echo " Usage : exoinjectusers -c <nb_of_users> [options]"
   echo ""
@@ -1097,7 +1098,8 @@ usage-users() {
   echo "    -U| --uppercase      Uppercased User Full Name Default: unused"
   echo ""
 }
-###################################################################################
+
+# @Private: Inject spaces help
 usage-spaces() {
   echo "Usage : exoinjectspaces -c <nb_of_spaces> [options]"
   echo ""
@@ -1112,7 +1114,8 @@ usage-spaces() {
   echo "    -U| --uppercase      Uppercased Space displayName Default: unused"
   echo ""
 }
-###################################################################################
+
+# @Public: Inject Users to eXo Server Instance
 function exoinjectusers() {
   SHORT=HPpscvuaoU
   LONG=host,port,userprefix,count,verbose,userpassword,auth,offset,uppercase
@@ -1217,8 +1220,7 @@ function exoinjectusers() {
   done
 }
 
-###################################################################################
-
+# @Public: Change HTTP Port of eXo Server Instance
 function exochangeport() {
   if [ -z "$1" ] || [[ ! "$1" =~ ^[0-9]+$ ]]; then
     exoprint_err "Please specify a correct server port!"
@@ -1246,8 +1248,7 @@ function exochangeport() {
 
 }
 
-###################################################################################
-
+# @Public: Activate JetBrains Product
 function exojetbrains() {
   if [[ $1 == "-d" ]]; then
     if [ -z "$2" ]; then
@@ -1263,7 +1264,6 @@ function exojetbrains() {
     exoprint_err "Please make sure you are working on a JetBrains Product"
     return
   fi
-
   exoprint_op "Downloading JetBrains activation agent...\n "
   JETCRX="http://dl.downloadly.ir/Files/Software2/JetBrains_Agent_2.2.0_Downloadly.ir.rar"
   DNCRXFILE="/tmp/JetBrains_Agent.rar"
@@ -1291,8 +1291,7 @@ function exojetbrains() {
   [ ! -z $(grep -i "jetbrains-agent.jar" $VMOPTFILE) ] && exoprint_suc "JetBrains Product has been activated !" || exoprint_err "Could not activate JetBrains Product!"
 }
 
-###################################################################################
-
+# @Public: Show eXo-Shell-Commands Help Menu
 function exohelp() {
   echo -e "$(tput setaf 2)****************************************$(tput init)"
   echo -e "$(tput setaf 3) eXo Shell Commands by Houssem B. A. v2 $(tput init)"
