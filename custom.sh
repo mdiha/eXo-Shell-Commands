@@ -1,6 +1,8 @@
 #!/bin/bash
 # eXo Basic Shell Commands
 # Released by Houssem B. Ali - eXo Support LAB 2019
+# eXo-Shell-Commands. Functions definitions 
+
 
 # @Public: Clear DATA FOR TOMCAT & JBOSS
 function exodataclear() {
