@@ -1334,7 +1334,7 @@ function exohelp() {
   echo -e "$(tput setaf 2)****************************************$(tput init)"
   echo "-- exoget:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exoget <tomcat|jboss> <version|latest> [--noclean] : Download eXo platform Instance."
-  echo "                   exoget <reset> : Reset eXo Nexus repository stored credentials."
+  echo "                   exoget <--reset> : Reset eXo Nexus repository stored credentials."
   echo -e "       $(tput setaf 6)Note :$(tput init)      <latest> argument  is only available for eXo Tomcat Server Instance"
   echo "-- exostart:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exostart: Run eXo platform instance."
@@ -1391,7 +1391,7 @@ function exohelp() {
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exojetbrains [-d <JetBrains_Directory>]: Activate any JetBrains Product"
   echo "-- exotribelog:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exotribelog: Download eXo Tribe log file."
-  echo "                   exotribelog <reset> : Reset eXo Nexus repository stored credentials."
+  echo "                   exotribelog <--reset> : Reset eXo Nexus repository stored credentials."
 
 }
 
