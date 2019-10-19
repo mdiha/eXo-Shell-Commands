@@ -1276,8 +1276,8 @@ function exojetbrains() {
   )
   if ! dpkg -l unrar &>/dev/null; then sudo apt install -y unrar; fi
   exoprint_op "Activating JetBrains... "
-  VMOPTFILE=$(find -name *64.vmoptions)
-  [ -z $VMOPTFILE ] && VMOPTFILE=$(find -name *.vmoptions)
+  VMOPTFILE=$(find $WKDIR -name *64.vmoptions)
+  [ -z $VMOPTFILE ] && VMOPTFILE=$(find $WKDIR -name *.vmoptions)
   if [ -z $VMOPTFILE ]; then
     exoprint_err "Could not find any Jetbreans Software!"
     return
@@ -1291,6 +1291,40 @@ function exojetbrains() {
   cp -f $AGENTFILE "$WKDIR/bin/" &>/dev/null
   [ -z $(grep -i "^-javaagent:" $VMOPTFILE | grep "jetbrains-agent") ] && echo "-javaagent:\"$(realpath '$WKDIR/bin/jetbrains-agent.jar')\"" >>$VMOPTFILE
   [ ! -z $(grep -i "jetbrains-agent.jar" $VMOPTFILE) ] && exoprint_suc "JetBrains Product has been activated !" || exoprint_err "Could not activate JetBrains Product!"
+}
+
+# @Public: Get eXo Platform Server instance From Repository
+function exotribelog() {
+  if [[ $1 == "--reset" ]]; then
+    rm -rf "$HOME/.plfcred.exo" &>/dev/null
+    exoprint_suc "Repository credentials has been cleared!"
+    return
+  fi
+  if [ -z "$(command -v wget)" ]; then
+    exoprint_err "wget is not installed !"
+    return
+  fi
+  if [[ ! -f "$HOME/.plfcred.exo" ]]; then
+    echo "Please input your eXo repository credentials"
+    echo -n "Username: "
+    read username
+    echo -n "Password: "
+    read -s password
+    echo "$username:$password" >"$HOME/.plfcred.exo"
+    clear
+    echo "Initial Config File has been created!"
+  fi
+  cred=$(<"$HOME/.plfcred.exo")
+  LOGURI="community.exoplatform.com/logs/platform.log"
+  LOGFILENAME="platform-$(date +'%d-%m-%Y--%H:%M:%S').log"
+  LOGFULLURI="https://$cred@$LOGURI"
+  wget "$LOGFULLURI" -O "$LOGFILENAME" --progress=bar:force 2>&1 | progressfilt
+  if [ $? -ne 0 ]; then
+    exoprint_err "Could not download $LOGFILENAME !"
+    return
+  fi
+  LOGFOLDERPATH="$(realpath "$LOGFILENAME")"
+  exoprint_suc "\e]8;;file://$LOGFOLDERPATH\a$LOGFILENAME\e]8;;\a has been created !"
 }
 
 # @Public: Show eXo-Shell-Commands Help Menu
@@ -1355,6 +1389,10 @@ function exohelp() {
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exoupdate: Update eXo Shell Commands"
   echo "-- exojetbrains:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exojetbrains [-d <JetBrains_Directory>]: Activate any JetBrains Product"
+  echo "-- exotribelog:"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exotribelog: Download eXo Tribe log file."
+  echo "                   exotribelog <reset> : Reset eXo Nexus repository stored credentials."
+
 }
 
 # @Private: Print Error Message
