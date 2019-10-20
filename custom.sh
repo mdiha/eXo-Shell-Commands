@@ -1386,7 +1386,6 @@ function exogettribeversion() {
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     exoget tomcat $TRIBEVERSION $*
   fi
-
 }
 
 # @Public: Show eXo-Shell-Commands Help Menu
@@ -1456,7 +1455,6 @@ function exohelp() {
   echo "                   exogettribelog <--reset> : Reset eXo Nexus repository stored credentials."
   echo "-- exosynctribelog:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exosynctribelog [-l <line_numbers>]: Synchronize eXo Tribe log file."
-  echo "                   exogettribelog <--reset> : Reset eXo Nexus repository stored credentials."
 }
 
 # @Private: Print Error Message
