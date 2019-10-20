@@ -3,7 +3,6 @@
 # Released by Houssem B. Ali - eXo Support 2019
 # eXo-Shell-Commands. Functions definitions
 
-
 # @Public: Clear DATA FOR eXo TOMCAT & JBOSS
 function exodataclear() {
   if [ $(isTomcat) == 0 -a $(isJBoss) == 0 ]; then
@@ -910,7 +909,10 @@ function exoupdate() {
     git -C "$WORKINGDIR/" pull --force &>/dev/null
   else
     exoprint_op "Please wait..."
-    git -C "$WORKINGDIR/" init  &> /dev/null && git -C "$WORKINGDIR/" remote add origin "$UPGITURL"  &> /dev/null && git -C "$WORKINGDIR/" fetch  &> /dev/null && git -C "$WORKINGDIR/"  checkout -t origin/master -f  &> /dev/null && exoprint_suc "You have updated eXo-Shell-Commands to the latest version !" || ( exoprint_err "Could not update eXo-Shell-Commands !"; return)
+    git -C "$WORKINGDIR/" init &>/dev/null && git -C "$WORKINGDIR/" remote add origin "$UPGITURL" &>/dev/null && git -C "$WORKINGDIR/" fetch &>/dev/null && git -C "$WORKINGDIR/" checkout -t origin/master -f &>/dev/null && exoprint_suc "You have updated eXo-Shell-Commands to the latest version !" || (
+      exoprint_err "Could not update eXo-Shell-Commands !"
+      return
+    )
   fi
   source "$WORKINGDIR/custom.sh"
 }
@@ -1293,8 +1295,8 @@ function exojetbrains() {
   [ ! -z $(grep -i "jetbrains-agent.jar" $VMOPTFILE) ] && exoprint_suc "JetBrains Product has been activated !" || exoprint_err "Could not activate JetBrains Product!"
 }
 
-# @Public: Get eXo Platform Server instance From Repository
-function exotribelog() {
+# @Public: Get eXo Tribe Log File
+function exogettribelog() {
   if [[ $1 == "--reset" ]]; then
     rm -rf "$HOME/.plfcred.exo" &>/dev/null
     exoprint_suc "Repository credentials has been cleared!"
@@ -1325,6 +1327,49 @@ function exotribelog() {
   fi
   LOGFOLDERPATH="$(realpath "$LOGFILENAME")"
   exoprint_suc "\e]8;;file://$LOGFOLDERPATH\a$LOGFILENAME\e]8;;\a has been created !"
+}
+
+# @Public: Sync eXo Tribe Log
+function exosynctribelog() {
+  if [[ $1 == "--reset" ]]; then
+    rm -rf "$HOME/.plfcred.exo" &>/dev/null
+    exoprint_suc "Repository credentials has been cleared!"
+    return
+  fi
+  if [[ $1 == "-l" ]]; then
+    linenb="$2"
+  fi
+  if [ -z "$linenb" ]; then linenb="20"; fi
+  if [ -z "$(command -v wget)" ]; then
+    exoprint_err "wget is not installed !"
+    return
+  fi
+  if [[ ! -f "$HOME/.plfcred.exo" ]]; then
+    echo "Please input your eXo repository credentials"
+    echo -n "Username: "
+    read username
+    echo -n "Password: "
+    read -s password
+    echo "$username:$password" >"$HOME/.plfcred.exo"
+    clear
+    echo "Initial Config File has been created!"
+  fi
+  cred=$(<"$HOME/.plfcred.exo")
+  LOGURI="community.exoplatform.com/logs/platform.log"
+  LOGFULLURI="https://$cred@$LOGURI"
+  if [ ! -z "$LOGFILTER" ]; then
+    if [[ "$LOGFILTER" == "INFO" ]] || [[ "$LOGFILTER" == "WARN" ]] || [[ "$LOGFILTER" == "ERROR" ]]; then
+      exoprint_op "Synchronizing eXo Tribe Log with \"$LOGFILTER\" logging filter..."
+    else
+      exoprint_warn "Invalid LOGFILTER value. Please choose one of these values INFO, WARN, or ERROR. Otherwise leave it empty"
+      unset LOGFILTER
+    fi
+  fi
+  if [ ! -z "$(command -v fgrep)" ] && [ ! -z "$LOGFILTER" ]; then
+    while true; do wget -qO- $LOGFULLURI | tail -f -n $linenb | fgrep "$LOGFILTER" --color=never; done
+  else
+    while true; do wget -qO- $LOGFULLURI | tail -f -n $linenb; done
+  fi
 }
 
 # @Public: Show eXo-Shell-Commands Help Menu
@@ -1389,10 +1434,12 @@ function exohelp() {
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exoupdate: Update eXo Shell Commands"
   echo "-- exojetbrains:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exojetbrains [-d <JetBrains_Directory>]: Activate any JetBrains Product"
-  echo "-- exotribelog:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)      exotribelog: Download eXo Tribe log file."
-  echo "                   exotribelog <--reset> : Reset eXo Nexus repository stored credentials."
-
+  echo "-- exogettribelog:"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exogettribelog: Download eXo Tribe log file."
+  echo "                   exogettribelog <--reset> : Reset eXo Nexus repository stored credentials."
+  echo "-- exosynctribelog:"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exosynctribelog [-l <line_numbers>]: Synchronize eXo Tribe log file."
+  echo "                   exogettribelog <--reset> : Reset eXo Nexus repository stored credentials."
 }
 
 # @Private: Print Error Message
