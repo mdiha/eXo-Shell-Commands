@@ -705,9 +705,9 @@ function exodevsync() {
     fi
   fi
   if [ ! -z "$(command -v fgrep)" ] && [ ! -z "$LOGFILTER" ]; then
-    tail -f $SRVDIR/logs/platform.log | fgrep "$LOGFILTER" --color=never
+    tail -f $SRVDIR/logs/platform.log | fgrep "$LOGFILTER" --color=never | colorize_log
   else
-    tail -f $SRVDIR/logs/platform.log
+    tail -f $SRVDIR/logs/platform.log | colorize_log
   fi
 }
 
@@ -1366,9 +1366,9 @@ function exosynctribelog() {
     fi
   fi
   if [ ! -z "$(command -v fgrep)" ] && [ ! -z "$LOGFILTER" ]; then
-    while true; do wget -qO- $LOGFULLURI | tail -f -n $linenb | fgrep "$LOGFILTER" --color=never; done
+    while true; do wget -qO- $LOGFULLURI | tail -f -n $linenb | fgrep "$LOGFILTER" --color=never | colorize_log; done
   else
-    while true; do wget -qO- $LOGFULLURI | tail -f -n $linenb; done
+    while true; do wget -qO- $LOGFULLURI | tail -f -n $linenb | colorize_log; done
   fi
 }
 
@@ -1460,4 +1460,9 @@ function exoprint_warn() {
 # @Private: Print Operation Message
 function exoprint_op() {
   echo -e "$(tput setaf 6)Operation:$(tput init) $1"
+}
+
+# @Private: Print Colored LOG
+function colorize_log() {
+  eval "sed -e 's/\[\(.*\)\]/$(tput setaf 2)\[\1\]$(tput init)/g;s/<\(.*\)>/$(tput setaf 6)<\1>$(tput init)/g;s/INFO/$(tput setaf 4)INFO$(tput init)/g;s/WARN/$(tput setaf 1)WARN$(tput init)/g;s/ERROR/$(tput setaf 1)$(tput bold)ERROR$(tput init)/g;'"
 }
