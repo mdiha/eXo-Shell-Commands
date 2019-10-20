@@ -1455,6 +1455,7 @@ function exohelp() {
   echo "                   exogettribelog <--reset> : Reset eXo Nexus repository stored credentials."
   echo "-- exosynctribelog:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exosynctribelog [-l <line_numbers>]: Synchronize eXo Tribe log file."
+  echo -e "       $(tput setaf 6)Note :$(tput init)      [Optional] Set $(tput setaf 3)LOGFILTER$(tput init) value to filter server log : INFO, WARN, or ERROR before running exostart (Ex LOGFILTER=WARN)"
 }
 
 # @Private: Print Error Message
