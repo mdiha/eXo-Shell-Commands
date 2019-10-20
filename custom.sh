@@ -1372,6 +1372,23 @@ function exosynctribelog() {
   fi
 }
 
+# @Public: Get eXo Tribe PLF version
+function exogettribeversion() {
+  TRIBEVERSION=$(wget -qO- https://community.exoplatform.com/rest/platform/info | grep -o -P '(?<="platformVersion":").*(?=","platformBuildNumber)')
+  if [ -z "$TRIBEVERSION" ]; then
+    exoprint_err "Could not get eXo Tribe Version !"
+    return
+  fi
+  exoprint_suc "eXo Tribe version: $TRIBEVERSION"
+  [ -z "$(command -v exoget)" ] && return
+  read -p "Would you like to download this version [y/n] ? " -n 1 -r
+  echo # (optional) move to a new line
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    exoget tomcat $TRIBEVERSION $*
+  fi
+
+}
+
 # @Public: Show eXo-Shell-Commands Help Menu
 function exohelp() {
   echo -e "$(tput setaf 2)****************************************$(tput init)"
