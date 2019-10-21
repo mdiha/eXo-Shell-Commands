@@ -269,7 +269,7 @@ function exoget() {
     return
   fi
   SNAPSHOTPLFVERSION="6.0.x-SNAPSHOT"
-  if [[ $2 == "latest" ]] || [[ $2 =~ "-M" ]]; then
+  if [[ $2 == "latest" ]]; then
     if [[ $dntype == "jbosseap" ]]; then
       exoprint_err "There is no SNAPSHOT versions for JBoss Server !"
       return
