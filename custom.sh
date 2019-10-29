@@ -1306,17 +1306,20 @@ function exojetbrains() {
     exoprint_err "Could not find any Jetbreans Software!"
     return
   fi
-  echo "Y" | unrar ux $DNCRXFILE */jetbrains-agent.jar -d /tmp/ -ep &>/dev/null
   AGENTFILE="/tmp/jetbrains-agent.jar"
+  rm -f $AGENTFILE &> /dev/null
+  echo "A" | unrar x $DNCRXFILE -d /tmp/ -ep &> /dev/null
   [ -f $AGENTFILE ] || (
     exoprint_err "Could not find agent file !"
     return
   )
   cp -f $AGENTFILE "$WKDIR/bin/" &>/dev/null
+  chown $USER "$WKDIR/bin/jetbrains-agent.jar" &>/dev/null
   CRXJARFULLPATH=$(realpath "$WKDIR/bin/jetbrains-agent.jar")
   sed -i '/^-javaagent:""/d' $VMOPTFILE &> /dev/null
+  sed -i '/^-javaagent:$/d' $VMOPTFILE &> /dev/null
   sed -i '/^$/d' $VMOPTFILE &> /dev/null
-  [ -z $(grep -i "^-javaagent:" $VMOPTFILE | grep "jetbrains-agent") ] && echo "-javaagent:\"$CRXJARFULLPATH\"" >>$VMOPTFILE
+  [ -z $(grep -i "^-javaagent:" $VMOPTFILE | grep "jetbrains-agent") ] && echo "-javaagent:$CRXJARFULLPATH" >>$VMOPTFILE
   [ ! -z $(grep -i "jetbrains-agent.jar" $VMOPTFILE) ] && exoprint_suc "JetBrains Product has been activated !" || exoprint_err "Could not activate JetBrains Product!"
 }
 
