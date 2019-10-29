@@ -1459,9 +1459,13 @@ function exogetaddonversion() {
 
 # @Public: Show eXo-Shell-Commands Help Menu
 function exohelp() {
-  echo -e "$(tput setaf 2)****************************************$(tput init)"
-  echo -e "$(tput setaf 3) eXo Shell Commands by Houssem B. A. v2 $(tput init)"
-  echo -e "$(tput setaf 2)****************************************$(tput init)"
+  echo -e "$(tput setaf 2)       ************************************************************************************************************************$(tput init)"
+  echo -e "$(tput setaf 3)                                            \e]8;;https://github.com/hbenali/eXo-Shell-Commands\aeXo-Shell-Commands\e]8;;\a by Houssem Ben Ali 2019 v 4.2 $(tput init)"
+  echo -e "$(tput setaf 3)                                                **   Github   :$(tput init) \e]8;;https://github.com/hbenali\agithub.com/hbenali\e]8;;\a"
+  echo -e "$(tput setaf 3)                                                ** eXo Account:$(tput init) \e]8;;https://community.exoplatform.com/portal/intranet/profile/houssem.benali\aexoplatorm.com/houssem.benali\e]8;;\a"
+  echo -e "                                                                                                              \e]8;;https://exoplatform.com\aexoplatform.com\e]8;;\a"
+  echo -e "$(tput setaf 2)       ************************************************************************************************************************$(tput init)"
+  echo -e "$(tput setaf 4)       Help Page: $(tput init)\n"
   echo "-- exoget:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exoget <tomcat|jboss> <version|latest> [--noclean] : Download eXo platform Instance."
   echo "                   exoget <--reset> : Reset eXo Nexus repository stored credentials."
