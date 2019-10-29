@@ -1,0 +1,5 @@
+1    | 20/10/2019 |    Add    |       exoupdate     | Update eXo Shell Commands
+2    | 21/10/2019 |    Add    |     exojetbrains    | Activate any JetBrains Product
+3    | 22/10/2019 |    Add    |    exogettribelog   | Download eXo Tribe log file
+4    | 23/10/2019 |    Add    |   exosynctribelog   | Synchronize eXo Tribe log file
+5    | 24/10/2019 |    Add    |  exogetaddonversion | Get Compatible Addon version list
