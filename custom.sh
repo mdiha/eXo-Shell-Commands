@@ -911,19 +911,23 @@ function exoupdate() {
   if [ -d "$WORKINGDIR/.git" ]; then
     git -C $WORKINGDIR fetch &> /dev/null
     if [ -z "$(git -C $WORKINGDIR diff 'origin/master')" ]; then
-      echo "You have already working on the latest version!"
+      exoprint_suc "You are working on the latest version of eXo-Shell-Commands!"
       return
     fi
     git -C "$WORKINGDIR/" checkout master --force &>/dev/null
     git -C "$WORKINGDIR/" pull --force &>/dev/null
   else
-    exoprint_op "Please wait..."
+    exoprint_op "eXo-Shell-Commands Updater initialization, please wait..."
     git -C "$WORKINGDIR/" init &>/dev/null && git -C "$WORKINGDIR/" remote add origin "$UPGITURL" &>/dev/null && git -C "$WORKINGDIR/" fetch &>/dev/null && git -C "$WORKINGDIR/" checkout -t origin/master -f &>/dev/null && exoprint_suc "You have updated eXo-Shell-Commands to the latest version !" || (
       exoprint_err "Could not update eXo-Shell-Commands !"
       return
     )
   fi
   exoprint_suc "You have updated eXo-Shell-Commands to the latest version !"
+  if [ -f "$WORKINGDIR/whatsnew.nfo" ] && [ ! -z $(cat "$WORKINGDIR/whatsnew.nfo") ]; then
+      echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ What's new ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      cat "$WORKINGDIR/whatsnew.nfo"
+  fi
   source "$WORKINGDIR/custom.sh"
 }
 
