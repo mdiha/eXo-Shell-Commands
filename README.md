@@ -1,5 +1,6 @@
 # eXo-Shell-Commands
-eXo Basic Shell Commands
+eXo Basic Shell Commands 
+--- By Houssem Ben Ali - eXo Support Team
 
 HOW TO INSTALL: 
 
