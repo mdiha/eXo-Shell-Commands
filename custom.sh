@@ -900,15 +900,23 @@ function exoidad() {
 function exoupdate() {
   UPGITURL="https://github.com/hbenali/eXo-Shell-Commands"
   WORKINGDIR="$HOME/.exocmd"
+  if ! ping -q -c 1 -W 1 8.8.8.8 >/dev/null; then
+    exoprint_err "Could not update eXo-Shell-Commands! Please check your internet connection!"
+    return
+  fi
   if [ -z "$(command git)" ]; then
     exoprint_err "Git command must be installed ! "
     return
   fi
-  if [ ! -d "$WORKINGDIR" ] || ! git ls-remote &> /dev/null; then
-    exoprint_err "Could not update eXo-Shell-Commands! "
+  if [ ! -d "$WORKINGDIR" ]; then
+    exoprint_err "Could not update eXo-Shell-Commands! Please check $WORKINGDIR Folder is present!"
     return
   fi
   if [ -d "$WORKINGDIR/.git" ]; then
+    if ! git -C $WORKINGDIR ls-remote &> /dev/null ; then
+        exoprint_err "Could not update eXo-Shell-Commands! Enable to connect to the Github Server!"
+        return
+    fi
     git -C $WORKINGDIR fetch &> /dev/null
     if [ -z "$(git -C $WORKINGDIR diff 'origin/master')" ]; then
       exoprint_suc "You are working on the latest version of eXo-Shell-Commands!"
