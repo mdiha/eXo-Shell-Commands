@@ -726,6 +726,15 @@ function exoidldap() {
     fi
     return
   fi
+  CFGFILE="picketlink-idm-openldap-config.xml"
+  if [[ "$1" == "-f" ]] || [[ "$1" == "--configFile" ]]; then
+    if [ ! -z "$2" ]; then
+      CFGFILE="$2"
+    else
+      exoprint_err "Could not find LDAP/AD Configuration File!"
+      return
+    fi
+  fi
   if [ -z "$(command -v sed)" ]; then
     exoprint_err "sed command is not installed !"
     return
@@ -787,12 +796,12 @@ function exoidldap() {
     exoprint_err "Could not get idm-configuration.xml file !"
     return
   fi
-  if ! unzip -j webapps/portal.war WEB-INF/conf/organization/picketlink-idm/examples/picketlink-idm-openldap-config.xml -d "$CONFDIR/organization/picketlink-idm/" &>/dev/null; then
-    exoprint_err "Could not get picketlink-idm-ldap-config.xml file !"
+  if ! unzip -j webapps/portal.war WEB-INF/conf/organization/picketlink-idm/examples/$CFGFILE -d "$CONFDIR/organization/picketlink-idm/" &>/dev/null; then
+    exoprint_err "Could not get $CFGFILE file !"
     return
   fi
-  if ! mv "$CONFDIR/organization/picketlink-idm/picketlink-idm-openldap-config.xml" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null; then
-    exoprint_err "Could not get picketlink-idm-ldap-config.xml file !"
+  if ! mv "$CONFDIR/organization/picketlink-idm/$CFGFILE" "$CONFDIR/organization/picketlink-idm/picketlink-idm-ldap-config.xml" &>/dev/null; then
+    exoprint_err "Could not get $CFGFILE file !"
     return
   fi
   if ! sed -i "s/<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-config.xml<\\/value>/<!--<value>war:\\/conf\\/organization\\/picketlink-idm\\/picketlink-idm-config.xml<\\/value>-->/g" "$CONFDIR/organization/idm-configuration.xml" &>/dev/null; then
@@ -1512,7 +1521,7 @@ function exohelp() {
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exosynctribelog [-l <line_numbers>]: Synchronize eXo Tribe log file."
   echo -e "       $(tput setaf 6)Note :$(tput init)      [Optional] Set $(tput setaf 3)LOGFILTER$(tput init) value to filter server log : INFO, WARN, or ERROR before running exostart (Ex LOGFILTER=WARN)"
   echo "-- exogetaddonversion:"
-  echo -e "$(tput setaf 2)       Usage:$(tput init)      exogetaddonversion <ADDON_NAME> [-v|--version PLF_VERSION]: Get Compatible eXo Shell Addon versions"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exogetaddonversion <ADDON_NAME> [-v|--version PLF_VERSION]: Get CompatAible eXo Shell Addon versions"
 }
 
 # @Private: Print Error Message
