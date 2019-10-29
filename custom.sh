@@ -1388,6 +1388,61 @@ function exogettribeversion() {
   fi
 }
 
+# @Public: Get eXo Supported version for eXo Instance
+function exogetaddonversion() {
+  SHORT=v
+  LONG=version
+  PARSED=$(getopt --options $SHORT --longoptions $LONG --name "$0" -- "$@")
+  if [[ $? -ne 0 ]]; then
+    # e.g. $? == 1
+    #  then getopt has complained about wrong arguments to stdout
+    return
+  fi
+  while true; do
+    case "$1" in
+    -v | --version)
+      PLFVERSION="$2"
+      shift 2
+      ;;
+    "")
+      break
+      ;;
+    *)
+      ADDONNAME="$1"
+      shift
+      ;;
+    esac
+  done
+  if [ $(isTomcat) != 0 ]; then
+    PLFVERSION=$(find lib -name 'commons-api-*' | sed -E 's/lib\/commons-api-//g' | sed -E 's/.jar//g')
+  fi
+  if [ -z "$PLFVERSION" ]; then
+    exoprint_err "Could not get platform version !"
+    return
+  fi
+  if [ -z "$ADDONNAME" ]; then
+    exoprint_err "Please set eXo Addon name !"
+    return
+  fi
+  MIDIUMVERSION=$(echo $PLFVERSION | grep -Po "^[0-9]\.[0-9]")
+  if [ -z "$MIDIUMVERSION" ]; then
+    exoprint_err "Could not get midium platform version !"
+    return
+  fi
+  MAJORVERSION=$(echo $PLFVERSION | grep -Po "^[0-9]")
+  CATALOGOUT=$(wget -qO- "http://storage.exoplatform.org/public/Addons/list.json")
+  CMPADDVER=$(echo $CATALOGOUT | eval "jq ' .[] | select((.id==\"$ADDONNAME\") and (.compatibility | startswith(\"[$MIDIUMVERSION\"))) | .version'" | tr -d '"')
+  if [ ! -z "$CMPADDVER" ]; then
+    echo "$(tput setaf 2)******* Compatible Version *******$(tput init)"
+    echo $CMPADDVER | tr " " "\n"
+  fi
+  MTADDVER=$(echo $CATALOGOUT | eval "jq ' .[] | select((.id==\"$ADDONNAME\") and (.compatibility | startswith(\"[$MAJORVERSION\")) and (.compatibility | endswith(\")\"))) | .version'" | tr -d '"')
+  if [ ! -z "$MTADDVER" ]; then
+    echo "$(tput setaf 3)*** +/- Compatible Version *******$(tput init)"
+    echo $MTADDVER | tr " " "\n"
+  fi
+}
+
 # @Public: Show eXo-Shell-Commands Help Menu
 function exohelp() {
   echo -e "$(tput setaf 2)****************************************$(tput init)"
@@ -1456,6 +1511,8 @@ function exohelp() {
   echo "-- exosynctribelog:"
   echo -e "$(tput setaf 2)       Usage:$(tput init)      exosynctribelog [-l <line_numbers>]: Synchronize eXo Tribe log file."
   echo -e "       $(tput setaf 6)Note :$(tput init)      [Optional] Set $(tput setaf 3)LOGFILTER$(tput init) value to filter server log : INFO, WARN, or ERROR before running exostart (Ex LOGFILTER=WARN)"
+  echo "-- exogetaddonversion:"
+  echo -e "$(tput setaf 2)       Usage:$(tput init)      exogetaddonversion <ADDON_NAME> [-v|--version PLF_VERSION]: Get Compatible eXo Shell Addon versions"
 }
 
 # @Private: Print Error Message
