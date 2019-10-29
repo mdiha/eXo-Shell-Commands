@@ -904,8 +904,8 @@ function exoupdate() {
     exoprint_err "Git command must be installed ! "
     return
   fi
-  if [ ! -d "$WORKINGDIR" ]; then
-    exoprint_err "Could not update ! "
+  if [ ! -d "$WORKINGDIR" ] || ! git ls-remote &> /dev/null; then
+    exoprint_err "Could not update eXo-Shell-Commands! "
     return
   fi
   if [ -d "$WORKINGDIR/.git" ]; then
