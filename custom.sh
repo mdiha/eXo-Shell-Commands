@@ -1298,7 +1298,7 @@ function exojetbrains() {
     exoprint_err "Could not find JetBrains_Agent.rar!"
     return
   )
-  if ! dpkg -l unrar &>/dev/null; then sudo apt install -y unrar; fi
+  if [ -z "$(command -v unrar)" ]; then sudo apt install -y unrar; fi
   exoprint_op "Activating JetBrains... "
   VMOPTFILE=$(find $WKDIR -name *64.vmoptions)
   [ -z $VMOPTFILE ] && VMOPTFILE=$(find $WKDIR -name *.vmoptions)
@@ -1306,14 +1306,17 @@ function exojetbrains() {
     exoprint_err "Could not find any Jetbreans Software!"
     return
   fi
-  echo "Y" | unrar x JetBrains_Agent.rar */jetbrains-agent.jar -ep &>/dev/null
+  echo "Y" | unrar ux $DNCRXFILE */jetbrains-agent.jar -d /tmp/ -ep &>/dev/null
   AGENTFILE="/tmp/jetbrains-agent.jar"
-  [ -e $AGENTFILE ] || (
+  [ -f $AGENTFILE ] || (
     exoprint_err "Could not find agent file !"
     return
   )
   cp -f $AGENTFILE "$WKDIR/bin/" &>/dev/null
-  [ -z $(grep -i "^-javaagent:" $VMOPTFILE | grep "jetbrains-agent") ] && echo "-javaagent:\"$(realpath '$WKDIR/bin/jetbrains-agent.jar')\"" >>$VMOPTFILE
+  CRXJARFULLPATH=$(realpath "$WKDIR/bin/jetbrains-agent.jar")
+  sed -i '/^-javaagent:""/d' $VMOPTFILE &> /dev/null
+  sed -i '/^$/d' $VMOPTFILE &> /dev/null
+  [ -z $(grep -i "^-javaagent:" $VMOPTFILE | grep "jetbrains-agent") ] && echo "-javaagent:\"$CRXJARFULLPATH\"" >>$VMOPTFILE
   [ ! -z $(grep -i "jetbrains-agent.jar" $VMOPTFILE) ] && exoprint_suc "JetBrains Product has been activated !" || exoprint_err "Could not activate JetBrains Product!"
 }
 
