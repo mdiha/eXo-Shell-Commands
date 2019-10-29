@@ -909,10 +909,9 @@ function exoupdate() {
     return
   fi
   if [ -d "$WORKINGDIR/.git" ]; then
-    if [ -z "$(git diff origin/master)" ]; then
+    if [ -z "$(git -C "$WORKINGDIR/" diff 'origin/master')" ]; then
       echo "You have already working on the latest version!"
-    else
-      exoprint_suc "You have updated eXo-Shell-Commands to the latest version !"
+      return
     fi
     git -C "$WORKINGDIR/" checkout master --force &>/dev/null
     git -C "$WORKINGDIR/" pull --force &>/dev/null
@@ -923,6 +922,7 @@ function exoupdate() {
       return
     )
   fi
+  exoprint_suc "You have updated eXo-Shell-Commands to the latest version !"
   source "$WORKINGDIR/custom.sh"
 }
 
