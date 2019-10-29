@@ -912,7 +912,7 @@ function exoupdate() {
     exoprint_err "Could not update eXo-Shell-Commands! Please check $WORKINGDIR Folder is present!"
     return
   fi
-  if [ -d "$WORKINGDIR/.git" ]; then
+  if [ -d "$WORKINGDIR/.git" ] || [[ "$1" == "--force" ]] || [[ "$1" == "-f" ]]; then
     if ! git -C $WORKINGDIR ls-remote &> /dev/null ; then
         exoprint_err "Could not update eXo-Shell-Commands! Enable to connect to the Github Server!"
         return
