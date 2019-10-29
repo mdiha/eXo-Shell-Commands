@@ -918,7 +918,7 @@ function exoupdate() {
     git -C "$WORKINGDIR/" pull --force &>/dev/null
   else
     exoprint_op "eXo-Shell-Commands Updater initialization, please wait..."
-    git -C "$WORKINGDIR/" init &>/dev/null && git -C "$WORKINGDIR/" remote add origin "$UPGITURL" &>/dev/null && git -C "$WORKINGDIR/" fetch &>/dev/null && git -C "$WORKINGDIR/" checkout -t origin/master -f &>/dev/null && exoprint_suc "You have updated eXo-Shell-Commands to the latest version !" || (
+    git -C "$WORKINGDIR/" init &>/dev/null && git -C "$WORKINGDIR/" remote add origin "$UPGITURL" &>/dev/null && git -C "$WORKINGDIR/" fetch &>/dev/null && git -C "$WORKINGDIR/" checkout -t origin/master -f &>/dev/null || (
       exoprint_err "Could not update eXo-Shell-Commands !"
       return
     )
