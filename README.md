@@ -9,6 +9,6 @@ HOW TO INSTALL:
 
 3- Open new Terminal Tab or run source ~/.exocmd/custom.sh
 
-4- You can run exohelp to show available commands
+4- You can run exohelp to show available commands.
 
 5- You can run exoupdate to install updates.
