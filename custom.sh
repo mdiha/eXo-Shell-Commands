@@ -924,7 +924,7 @@ function exoupdate() {
     )
   fi
   exoprint_suc "You have updated eXo-Shell-Commands to the latest version !"
-  if [ -f "$WORKINGDIR/whatsnew.nfo" ] && [ ! -z $(cat "$WORKINGDIR/whatsnew.nfo") ]; then
+  if [ -f "$WORKINGDIR/whatsnew.nfo" ] && [ ! -z "$(cat $WORKINGDIR/whatsnew.nfo)" ]; then
       echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ What's new ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
       cat "$WORKINGDIR/whatsnew.nfo"
   fi
