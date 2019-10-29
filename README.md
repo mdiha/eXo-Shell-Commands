@@ -12,4 +12,4 @@ HOW TO INSTALL:
 
 4- You can run exohelp to show available commands.
 
-5- You can run exoupdate to install updates.
+5- You can run exoupdate to install updates and checkout what's new.
